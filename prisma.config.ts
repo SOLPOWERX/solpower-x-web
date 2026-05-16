@@ -9,6 +9,6 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["TURSO_DATABASE_URL"] || "file:./dev.db",
+    url: process.env["TURSO_DATABASE_URL"] || "https://solpower-db-urieling3-web.aws-us-east-1.turso.io",
   },
 });
