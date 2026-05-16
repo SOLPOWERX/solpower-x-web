@@ -1,10 +1,16 @@
 import { SignJWT, jwtVerify } from "jose";
+import type { JWTPayload } from "jose";
 import { cookies } from "next/headers";
 
 const secretKey = process.env.SESSION_SECRET || "solpower_x_super_secret_key_2024_change_me_in_prod";
 const key = new TextEncoder().encode(secretKey);
 
-export async function encrypt(payload: any) {
+/** Datos guardados dentro del JWT de sesión (cookies). */
+export type SessionJwtPayload = JWTPayload & {
+  userId: string;
+};
+
+export async function encrypt(payload: SessionJwtPayload): Promise<string> {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -12,7 +18,7 @@ export async function encrypt(payload: any) {
     .sign(key);
 }
 
-export async function decrypt(input: string): Promise<any> {
+export async function decrypt(input: string): Promise<JWTPayload> {
   const { payload } = await jwtVerify(input, key, {
     algorithms: ["HS256"],
   });
@@ -21,7 +27,7 @@ export async function decrypt(input: string): Promise<any> {
 
 export async function createSession(userId: string) {
   const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  const session = await encrypt({ userId, expires });
+  const session = await encrypt({ userId });
   
   (await cookies()).set("session", session, {
     expires,

@@ -32,7 +32,7 @@ export default function LoginPage() {
         const data = await res.json();
         setError(data.error || "Error de autenticación");
       }
-    } catch (err) {
+    } catch {
       setError("Error de red");
     } finally {
       setLoading(false);

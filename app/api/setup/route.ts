@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function GET() {
   try {
+    const prisma = await getPrisma();
     const adminCount = await prisma.adminUser.count();
     
     if (adminCount === 0) {

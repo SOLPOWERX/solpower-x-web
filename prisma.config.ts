@@ -3,14 +3,27 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const isInvalidDatabaseUrl = (value: string | undefined) => {
+  const trimmed = value?.trim()
+  if (!trimmed) return true
+  if (trimmed === "undefined" || trimmed === "null") return true
+  if (trimmed.includes("your-db-name") || trimmed.includes("your-auth-token")) return true
+  return false
+}
+
+const databaseUrl =
+  (!isInvalidDatabaseUrl(process.env.DATABASE_URL)
+    ? process.env.DATABASE_URL!.trim()
+    : !isInvalidDatabaseUrl(process.env.TURSO_DATABASE_URL)
+      ? process.env.TURSO_DATABASE_URL!.trim()
+      : undefined) ?? "file:./dev.db"
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: (process.env["TURSO_DATABASE_URL"] && process.env["TURSO_DATABASE_URL"] !== "undefined") 
-      ? process.env["TURSO_DATABASE_URL"] 
-      : "https://solpower-db-urieling3-web.aws-us-east-1.turso.io",
+    url: databaseUrl,
   },
 });

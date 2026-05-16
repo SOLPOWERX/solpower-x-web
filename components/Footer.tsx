@@ -1,11 +1,12 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Footer() {
   return (
     <footer className="bg-surface-container-lowest w-full py-12 border-t border-on-surface-variant/5">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 px-4 md:px-12 max-w-[1440px] mx-auto">
         <div className="md:col-span-1">
-          <a href="/" className="flex items-center mb-6 gap-0 hover:opacity-80 transition-opacity">
+          <Link href="/" className="flex items-center mb-6 gap-0 hover:opacity-80 transition-opacity">
             <Image
               src="/log.png"
               alt="Logo SOLPOWER X"
@@ -15,7 +16,7 @@ export default function Footer() {
               style={{ transform: "translateY(0%)" }}
             />
             <span className="font-headline-sm font-bold text-on-surface uppercase tracking-widest leading-none" style={{ marginLeft: "-0.75rem" }}>SOLPOWER X</span>
-          </a>
+          </Link>
           <p className="text-on-surface-variant text-sm">
             Liderando la transición energética con ingeniería de precisión en Colombia.
           </p>
@@ -23,10 +24,10 @@ export default function Footer() {
         <div>
           <h5 className="text-on-surface font-bold mb-4 uppercase text-xs tracking-widest">Servicios</h5>
           <ul className="space-y-2">
-            <li><a className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#solar">Solar Fotovoltaica</a></li>
-            <li><a className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#solar">Sistemas Híbridos</a></li>
-            <li><a className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#engineering">Auditoría Energética</a></li>
-            <li><a className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#engineering">Ingeniería Eléctrica</a></li>
+            <li><Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#solar">Solar Fotovoltaica</Link></li>
+            <li><Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#solar">Sistemas Híbridos</Link></li>
+            <li><Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#engineering">Auditoría Energética</Link></li>
+            <li><Link className="text-on-surface-variant hover:text-primary transition-colors text-sm" href="/#engineering">Ingeniería Eléctrica</Link></li>
           </ul>
         </div>
         <div>
@@ -47,7 +48,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="mt-12 pt-8 border-t border-on-surface-variant/5 text-center px-4">
-        <a href="/" className="flex flex-col items-center gap-1 md:flex-row md:justify-center md:gap-2 hover:opacity-80 transition-opacity">
+        <Link href="/" className="flex flex-col items-center gap-1 md:flex-row md:justify-center md:gap-2 hover:opacity-80 transition-opacity">
           <Image
             src="/log.png"
             alt="Logo SOLPOWER X"
@@ -59,7 +60,7 @@ export default function Footer() {
           <p className="text-on-surface-variant text-xs opacity-60 max-w-xl md:max-w-2xl">
             © {new Date().getFullYear()} SOLPOWER X. Ingeniería y Sincronización de Energía. Todos los derechos reservados.
           </p>
-        </a>
+        </Link>
       </div>
     </footer>
   );

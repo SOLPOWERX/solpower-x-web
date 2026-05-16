@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { createSession } from "@/lib/auth";
 
 export async function POST(request: Request) {
   try {
+    const prisma = await getPrisma();
     const { username, password } = await request.json();
 
     const user = await prisma.adminUser.findUnique({

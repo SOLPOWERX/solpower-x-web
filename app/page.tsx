@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Services from "@/components/Services";
@@ -11,7 +11,8 @@ import ContactForm from "@/components/ContactForm";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import Footer from "@/components/Footer";
 
-// Revalidate page dynamically or set a revalidation time
+// Force dynamic rendering and avoid build-time DB fetching
+export const dynamic = "force-dynamic";
 export const revalidate = 0; // Dynamic rendering to always show current section state
 
 const defaultSections = [
@@ -26,6 +27,7 @@ const defaultSections = [
 ];
 
 async function ensureSectionStates() {
+  const prisma = await getPrisma();
   const count = await prisma.sectionState.count();
 
   if (count > 0) {
@@ -42,6 +44,7 @@ async function ensureSectionStates() {
 }
 
 async function ensureDefaultStatistics() {
+  const prisma = await getPrisma();
   const count = await prisma.statistic.count();
   if (count > 0) {
     return;
@@ -63,6 +66,7 @@ export default async function Home() {
   await ensureSectionStates();
   await ensureDefaultStatistics();
 
+  const prisma = await getPrisma();
   // Fetch all section states directly from DB
   const sections = await prisma.sectionState.findMany();
   const stats = await prisma.statistic.findMany({ orderBy: { displayOrder: "asc" } });

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
@@ -11,6 +11,7 @@ interface ProjectPageProps {
 
 export default async function ProjectDetailPage({ params }: ProjectPageProps) {
   const { id } = await params;
+  const prisma = await getPrisma();
 
   const project = await prisma.project.findUnique({
     where: { id },

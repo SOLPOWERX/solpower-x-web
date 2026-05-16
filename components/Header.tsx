@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,7 +11,7 @@ export default function Header() {
   return (
     <nav className="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-xl dark:bg-surface/80 border-b border-on-surface-variant/10 shadow-sm py-3 md:py-5">
       <div className="flex justify-between items-center px-3 md:px-8 lg:px-12 max-w-[1440px] mx-auto">
-        <a href="/" className="flex items-center gap-2 md:gap-4 min-w-0 hover:opacity-80 transition-opacity">
+        <Link href="/" className="flex items-center gap-2 md:gap-4 min-w-0 hover:opacity-80 transition-opacity">
           <Image
             src="/log.png"
             alt="Logo SOLPOWER X"
@@ -20,16 +21,16 @@ export default function Header() {
             style={{ transform: "translateY(0%)" }}
           />
           <span className="font-headline-sm text-sm md:text-xl lg:text-3xl text-on-surface uppercase tracking-tighter truncate">SOLPOWER X</span>
-        </a>
+        </Link>
         
         <div className="hidden md:flex gap-4 lg:gap-8 items-center">
-          <a className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#solar">Energía Solar</a>
-          <a className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#engineering">Ingeniería</a>
-          <a className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#tecnologias">Tecnologías</a>
-          <a className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#contacto">Contacto</a>
-          <a href="/#contacto" className="bg-secondary-container text-on-secondary-container px-4 md:px-5 lg:px-6 py-2 rounded-full font-label-md text-xs lg:text-sm hover:scale-105 transition-transform duration-200 uppercase tracking-wider whitespace-nowrap">
+          <Link className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#solar">Energía Solar</Link>
+          <Link className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#engineering">Ingeniería</Link>
+          <Link className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#tecnologias">Tecnologías</Link>
+          <Link className="font-headline-sm text-xs lg:text-sm text-on-surface-variant hover:text-primary transition-colors duration-300 uppercase tracking-widest" href="/#contacto">Contacto</Link>
+          <Link href="/#contacto" className="bg-secondary-container text-on-secondary-container px-4 md:px-5 lg:px-6 py-2 rounded-full font-label-md text-xs lg:text-sm hover:scale-105 transition-transform duration-200 uppercase tracking-wider whitespace-nowrap">
             Solicitar Cotización
-          </a>
+          </Link>
         </div>
 
         <button 
@@ -49,10 +50,10 @@ export default function Header() {
             exit={{ opacity: 0, y: -20 }}
             className="absolute top-24 left-0 w-full bg-surface border-b border-on-surface-variant/10 shadow-lg p-4 flex flex-col gap-4 md:hidden"
           >
-            <a onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#solar">Energía Solar</a>
-            <a onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#engineering">Ingeniería</a>
-            <a onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#tecnologias">Tecnologías</a>
-            <a onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#contacto">Contacto</a>
+            <Link onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#solar">Energía Solar</Link>
+            <Link onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#engineering">Ingeniería</Link>
+            <Link onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#tecnologias">Tecnologías</Link>
+            <Link onClick={() => setIsMenuOpen(false)} className="p-4 text-on-surface hover:bg-surface-variant rounded-lg uppercase tracking-widest text-sm" href="/#contacto">Contacto</Link>
           </motion.div>
         )}
       </AnimatePresence>

@@ -1,17 +1,19 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    const prisma = await getPrisma();
     const sections = await prisma.sectionState.findMany();
     return NextResponse.json({ sections });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch sections" }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
   try {
+    const prisma = await getPrisma();
     const { name, status } = await request.json();
     
     if (!name || !status) {
@@ -24,7 +26,7 @@ export async function PUT(request: Request) {
     });
 
     return NextResponse.json({ success: true, section: updated });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to update section" }, { status: 500 });
   }
 }

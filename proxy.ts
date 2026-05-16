@@ -16,7 +16,7 @@ export async function proxy(request: NextRequest) {
       if (!payload || !payload.userId) {
         return NextResponse.redirect(new URL("/workspace/login", request.url));
       }
-    } catch (error) {
+    } catch {
       // Token is invalid or expired
       return NextResponse.redirect(new URL("/workspace/login", request.url));
     }

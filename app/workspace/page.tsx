@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 
 type Section = {
   id: string;
@@ -79,7 +78,11 @@ export default function WorkspacePage() {
 
   const handleStatusChange = async (name: string, newStatus: string) => {
     // Optimistic update
-    setSections(prev => prev.map(s => s.name === name ? { ...s, status: newStatus as any } : s));
+    setSections((prev) =>
+      prev.map((s) =>
+        s.name === name ? { ...s, status: newStatus as Section["status"] } : s,
+      ),
+    );
     
     await fetch("/api/sections", {
       method: "PUT",

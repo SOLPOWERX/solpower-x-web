@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 import { sendLeadNotification } from "@/lib/mailer";
 
 export async function GET() {
   try {
+    const prisma = await getPrisma();
     const leads = await prisma.lead.findMany({
       orderBy: { createdAt: "desc" }
     });
     return NextResponse.json({ leads });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
   }
 }
 
 export async function POST(request: Request) {
   try {
+    const prisma = await getPrisma();
     const { name, email, interest, message } = await request.json();
     
     if (!name || !email || !message) {
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
     await sendLeadNotification({ name, email, interest: interest || "General", message });
 
     return NextResponse.json({ success: true, lead });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Error al guardar el mensaje" }, { status: 500 });
   }
 }

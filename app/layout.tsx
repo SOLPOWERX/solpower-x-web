@@ -31,6 +31,8 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <head>
+        {/* Material Symbols: variable font cargado desde Google; Next no lo ofrece vía next/font */}
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className={`${inter.variable} ${montserrat.variable} bg-background text-on-background selection:bg-primary selection:text-on-primary-fixed antialiased`}>

@@ -2,18 +2,30 @@
 import { createClient } from "@libsql/client";
 import "dotenv/config";
 
+const isInvalidTursoUrl = (value: string | undefined) => {
+  const trimmed = value?.trim()
+  if (!trimmed) return true
+  if (trimmed === "undefined" || trimmed === "null") return true
+  if (trimmed.includes("your-db-name") || trimmed.includes("your-auth-token")) return true
+  return false
+}
+
 async function init() {
-  const url = process.env.DATABASE_URL;
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const url = !isInvalidTursoUrl(process.env.DATABASE_URL)
+    ? process.env.DATABASE_URL!.trim()
+    : !isInvalidTursoUrl(process.env.TURSO_DATABASE_URL)
+    ? process.env.TURSO_DATABASE_URL!.trim()
+    : undefined
+  const authToken = process.env.TURSO_AUTH_TOKEN?.trim()
 
   if (!url) {
-    console.error("Error: DATABASE_URL no encontrada en el archivo .env");
+    console.error("Error: DATABASE_URL o TURSO_DATABASE_URL no encontrada o inválida en el archivo .env");
     process.exit(1);
   }
 
   console.log("Conectando a Turso...");
   const client = createClient({
-    url: url.replace("libsql://", "https://"),
+    url: url.startsWith("libsql://") ? url.replace("libsql://", "https://") : url,
     authToken: authToken,
   });
 

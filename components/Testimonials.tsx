@@ -27,7 +27,7 @@ export default function Testimonials() {
               ))}
             </div>
             <p className="text-on-surface-variant italic mb-8 relative z-10 text-sm">
-              "El nivel de detalle técnico y el acompañamiento durante todo el proyecto superó nuestras expectativas. La reducción en la factura es exactamente la proyectada."
+              «El nivel de detalle técnico y el acompañamiento durante todo el proyecto superó nuestras expectativas. La reducción en la factura es exactamente la proyectada.»
             </p>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-surface-container-highest rounded-full"></div>

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getPrisma } from "@/lib/prisma";
 
 export async function GET() {
   try {
+    const prisma = await getPrisma();
     const stats = await prisma.statistic.findMany({ orderBy: { displayOrder: "asc" } });
     return NextResponse.json({ stats });
   } catch (error) {
@@ -13,6 +14,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const prisma = await getPrisma();
     const body = await request.json();
     const stat = await prisma.statistic.create({
       data: {
@@ -32,6 +34,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const prisma = await getPrisma();
     const body = await request.json();
     if (!body.id) {
       return NextResponse.json({ error: "Missing stat id" }, { status: 400 });

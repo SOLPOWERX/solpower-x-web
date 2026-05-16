@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 
 interface ProjectData {
@@ -85,7 +86,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectData 
               viewport={{ once: true }}
               className="relative"
             >
-              <span className="absolute -left-4 md:-left-12 top-0 text-primary/10 text-8xl font-serif select-none italic">"</span>
+              <span className="absolute -left-4 md:-left-12 top-0 text-primary/10 text-8xl font-serif select-none italic" aria-hidden>
+                &#8220;
+              </span>
               <h2 className="text-sm font-bold text-primary uppercase tracking-[0.3em] mb-8">El Desafío y la Visión</h2>
               <p className="text-on-surface-variant text-xl md:text-2xl leading-relaxed font-light italic">
                 {project.description}
@@ -137,12 +140,12 @@ export default function ProjectDetailClient({ project }: { project: ProjectData 
               <p className="text-on-surface-variant text-center mb-8 text-sm">
                 Inspirado en {project.name}, podemos diseñar una solución a medida para sus necesidades industriales o comerciales.
               </p>
-              <a
+              <Link
                 href="/#contacto"
                 className="block w-full bg-primary text-on-primary py-4 rounded-xl text-center font-bold uppercase tracking-[0.2em] text-xs hover:scale-[1.02] transition-all shadow-lg"
               >
                 Solicitar Diagnóstico Técnico
-              </a>
+              </Link>
               <p className="text-[10px] text-center mt-4 opacity-40 uppercase tracking-widest">Consultoría Premium SOLPOWER X</p>
             </motion.div>
 
@@ -168,9 +171,9 @@ export default function ProjectDetailClient({ project }: { project: ProjectData 
       <section className="py-24 border-t border-white/5">
         <div className="max-w-[1440px] mx-auto px-4 md:px-12">
           <div className="flex justify-between items-center">
-            <a href="/#proyectos" className="flex items-center gap-3 text-on-surface/40 hover:text-primary transition-colors uppercase tracking-widest text-xs font-bold">
+            <Link href="/#proyectos" className="flex items-center gap-3 text-on-surface/40 hover:text-primary transition-colors uppercase tracking-widest text-xs font-bold">
               <span className="material-symbols-outlined">arrow_back</span> Ver Portafolio
-            </a>
+            </Link>
             <div className="h-px flex-grow mx-8 bg-gradient-to-r from-transparent via-on-surface/10 to-transparent"></div>
             <span className="text-primary text-[10px] uppercase tracking-[0.5em] font-bold">Solpower X Engineering</span>
           </div>
