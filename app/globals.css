@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  --color-on-primary-fixed-variant: #34466d;
+  --color-on-error: #690005;
+  --color-on-surface-variant: #c5c6cf;
+  --color-on-tertiary-container: #b37c59;
+  --color-inverse-primary: #4c5e86;
+  --color-on-tertiary-fixed-variant: #673c1e;
+  --color-inverse-surface: #e4e2e5;
+  --color-on-secondary: #002b75;
+  --color-on-primary: #1d2f55;
+  --color-primary: #b4c6f4;
+  --color-surface-container: #1f1f22;
+  --color-surface-container-low: #1b1b1e;
+  --color-tertiary-fixed-dim: #f8b992;
+  --color-background: #131316;
+  --color-on-secondary-fixed-variant: #003fa4;
+  --color-tertiary-fixed: #ffdbc7;
+  --color-secondary-container: #0266ff;
+  --color-on-primary-fixed: #041a3f;
+  --color-secondary: #b3c5ff;
+  --color-surface-container-high: #292a2d;
+  --color-error: #ffb4ab;
+  --color-on-tertiary: #4d260a;
+  --color-surface-bright: #39393c;
+  --color-on-surface: #e4e2e5;
+  --color-tertiary: #f8b992;
+  --color-on-tertiary-fixed: #311300;
+  --color-secondary-fixed: #dae1ff;
+  --color-primary-container: #0a1f44;
+  --color-surface-container-highest: #343438;
+  --color-primary-fixed: #d9e2ff;
+  --color-on-primary-container: #7687b2;
+  --color-on-secondary-fixed: #001849;
+  --color-on-background: #e4e2e5;
+  --color-on-secondary-container: #f9f7ff;
+  --color-inverse-on-surface: #303033;
+  --color-tertiary-container: #391700;
+  --color-on-error-container: #ffdad6;
+  --color-outline-variant: #44464e;
+  --color-surface-dim: #131316;
+  --color-surface: #131316;
+  --color-surface-variant: #343438;
+  --color-secondary-fixed-dim: #b3c5ff;
+  --color-outline: #8f9099;
+  --color-error-container: #93000a;
+  --color-primary-fixed-dim: #b4c6f4;
+  --color-surface-tint: #b4c6f4;
+  --color-surface-container-lowest: #0d0e11;
+  --color-solar-yellow: #F5B301;
+
+  --spacing-margin-mobile: 16px;
+  --spacing-gutter: 24px;
+  --spacing-margin-desktop: 80px;
+  --spacing-container-max: 1440px;
+  --spacing-unit: 8px;
+
+  --font-headline-md: "Montserrat", sans-serif;
+  --font-headline-xl: "Montserrat", sans-serif;
+  --font-label-md: "Inter", sans-serif;
+  --font-headline-md-mobile: "Montserrat", sans-serif;
+  --font-headline-lg: "Montserrat", sans-serif;
+  --font-body-lg: "Inter", sans-serif;
+  --font-headline-sm: "Montserrat", sans-serif;
+  --font-headline-lg-mobile: "Montserrat", sans-serif;
+  --font-body-md: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-background selection:bg-primary selection:text-on-primary-fixed font-body-md;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: rgba(42, 42, 42, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .energy-glow {
+    box-shadow: 0 0 20px rgba(0, 102, 255, 0.15);
+  }
+  .pulse-yellow {
+    box-shadow: 0 0 15px rgba(245, 179, 1, 0.4);
+  }
+  .bg-mesh {
+    background-image: radial-gradient(at 0% 0%, rgba(10, 31, 68, 0.8) 0, transparent 50%),
+                      radial-gradient(at 100% 100%, rgba(2, 102, 255, 0.1) 0, transparent 50%);
+  }
+}

@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // hashed password
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SectionState {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  status    String   @default("hidden") // "visible", "hidden", "draft"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Statistic {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  value     String
+  subtext   String
+  visible   Boolean  @default(true)
+  displayOrder Int   @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Lead {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  interest  String
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model Project {
+  id                String   @id @default(cuid())
+  name              String   @unique
+  description       String
+  partnerCompany    String   // Socio comercial
+  powerKwp          Float    // Potencia en kWp
+  projectType       String   // Tipo: Industrial, Residencial, Comercial
+  location          String   // Ubicación
+  impact            String   // Impacto energético
+  imageUrl          String   // URL de imagen principal
+  technicalSpecs    String   // Especificaciones técnicas (JSON o texto)
+  visible           Boolean  @default(true)
+  displayOrder      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
