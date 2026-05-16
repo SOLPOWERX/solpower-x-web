@@ -18,6 +18,13 @@ type Lead = {
   message: string;
   createdAt: string;
 };
+type Statistic = {
+  id: string;
+  name: string;
+  value: string;
+  subtext: string;
+  visible: boolean;
+};
 
 type Project = {
   id: string;
