@@ -13,67 +13,89 @@ import Footer from "@/components/Footer";
 
 // Force dynamic rendering and avoid build-time DB fetching
 export const dynamic = "force-dynamic";
-export const revalidate = 0; // Dynamic rendering to always show current section state
+export const revalidate = 0;
 
 const defaultSections = [
-  { name: "hero", status: "visible" },
-  { name: "services", status: "visible" },
-  { name: "technologies", status: "visible" },
-  { name: "contact", status: "visible" },
-  { name: "experience", status: "hidden" },
-  { name: "projects", status: "hidden" },
-  { name: "testimonials", status: "hidden" },
-  { name: "clients", status: "hidden" },
+  { name: "hero", status: "visible" as const },
+  { name: "services", status: "visible" as const },
+  { name: "technologies", status: "visible" as const },
+  { name: "contact", status: "visible" as const },
+  { name: "experience", status: "hidden" as const },
+  { name: "projects", status: "hidden" as const },
+  { name: "testimonials", status: "hidden" as const },
+  { name: "clients", status: "hidden" as const },
 ];
 
-async function ensureSectionStates() {
-  const prisma = await getPrisma();
-  const count = await prisma.sectionState.count();
+/** Datos mínimos para el Hero si la BD no está disponible (misma forma que Prisma). */
+const FALLBACK_STATS = [
+  {
+    id: "fallback-average_savings",
+    name: "average_savings",
+    value: "35%",
+    subtext: "Ahorro Promedio",
+    visible: true,
+    displayOrder: 0,
+  },
+  {
+    id: "fallback-energy_generated",
+    name: "energy_generated",
+    value: "500+",
+    subtext: "MWh Generados",
+    visible: true,
+    displayOrder: 1,
+  },
+];
 
-  if (count > 0) {
-    return;
+type SectionRow = { name: string; status: string };
+
+async function loadHomeFromDatabase(): Promise<{
+  sections: SectionRow[];
+  stats: typeof FALLBACK_STATS;
+}> {
+  const prisma = await getPrisma();
+
+  const sectionCount = await prisma.sectionState.count();
+  if (sectionCount === 0) {
+    await Promise.all(
+      defaultSections.map((section) =>
+        prisma.sectionState.create({
+          data: { name: section.name, status: section.status },
+        }),
+      ),
+    );
   }
 
-  await Promise.all(
-    defaultSections.map((section) =>
-      prisma.sectionState.create({
-        data: section,
-      }),
-    ),
-  );
-}
-
-async function ensureDefaultStatistics() {
-  const prisma = await getPrisma();
-  const count = await prisma.statistic.count();
-  if (count > 0) {
-    return;
+  const statCount = await prisma.statistic.count();
+  if (statCount === 0) {
+    const defaultStats = [
+      { name: "average_savings", value: "35%", subtext: "Ahorro Promedio", visible: true, displayOrder: 0 },
+      { name: "energy_generated", value: "500+", subtext: "MWh Generados", visible: true, displayOrder: 1 },
+    ];
+    await Promise.all(
+      defaultStats.map((stat) => prisma.statistic.create({ data: stat })),
+    );
   }
 
-  const defaultStats = [
-    { name: "average_savings", value: "35%", subtext: "Ahorro Promedio", visible: true, displayOrder: 0 },
-    { name: "energy_generated", value: "500+", subtext: "MWh Generados", visible: true, displayOrder: 1 },
-  ];
+  const sections = await prisma.sectionState.findMany();
+  const stats = await prisma.statistic.findMany({ orderBy: { displayOrder: "asc" } });
 
-  await Promise.all(
-    defaultStats.map((stat) =>
-      prisma.statistic.create({ data: stat }),
-    ),
-  );
+  return { sections, stats };
 }
 
 export default async function Home() {
-  await ensureSectionStates();
-  await ensureDefaultStatistics();
+  let sections: SectionRow[] = defaultSections.map((s) => ({ name: s.name, status: s.status }));
+  let stats = FALLBACK_STATS;
 
-  const prisma = await getPrisma();
-  // Fetch all section states directly from DB
-  const sections = await prisma.sectionState.findMany();
-  const stats = await prisma.statistic.findMany({ orderBy: { displayOrder: "asc" } });
-  
-  // Helper function to check if a section is visible
+  try {
+    const loaded = await loadHomeFromDatabase();
+    sections = loaded.sections;
+    stats = loaded.stats;
+  } catch (err) {
+    console.error("[home] Base de datos no disponible; usando contenido por defecto.", err);
+  }
+
   const isVisible = (name: string) => {
-    const section = sections.find((s: { name: string; status: string }) => s.name === name);
+    const section = sections.find((s) => s.name === name);
     return section?.status === "visible";
   };
 
