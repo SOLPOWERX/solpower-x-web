@@ -63,8 +63,7 @@ export async function sendLeadNotification(lead: LeadEmailData) {
               </div>
             </div>
             <div class="footer">
-              Ver todos los leads →
-              <a href="${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/workspace">Panel de Administración</a>
+              Responder al cliente desde su correo o gestionar leads en su bandeja.
             </div>
           </div>
         </body>
