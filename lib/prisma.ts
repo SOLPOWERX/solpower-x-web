@@ -3,12 +3,15 @@ import { createClient } from '@libsql/client'
 import { PrismaLibSQL } from '@prisma/adapter-libsql'
 
 const prismaClientSingleton = () => {
-  // Hardcoded fallback to ensure it NEVER is undefined in Vercel
   const tursoUrl = "https://solpower-db-urieling3-web.aws-us-east-1.turso.io"
-  const url = process.env.TURSO_DATABASE_URL || tursoUrl
+  
+  // Si la variable es nula, vacía o literalmente la palabra "undefined" (común en Vercel build)
+  const rawUrl = process.env.TURSO_DATABASE_URL;
+  const url = (rawUrl && rawUrl !== "undefined" && rawUrl !== "") ? rawUrl : tursoUrl;
+  
   const authToken = process.env.TURSO_AUTH_TOKEN
   
-  console.log("Iniciando Prisma con URL:", url ? "Definida" : "FALLO");
+  console.log("Conectando a:", url.substring(0, 15) + "...");
 
   const libsql = createClient({
     url: url,
