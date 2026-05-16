@@ -11,7 +11,7 @@ const prismaClientSingleton = () => {
     authToken: authToken,
   })
   
-  const adapter = new PrismaLibSQL(libsql)
+  const adapter = new PrismaLibSQL(libsql as any)
   return new PrismaClient({ adapter })
 }
 
