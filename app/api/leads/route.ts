@@ -1,38 +1,31 @@
 import { NextResponse } from "next/server";
-import { getPrisma } from "@/lib/prisma";
 import { sendLeadNotification } from "@/lib/mailer";
 
-export async function GET() {
-  try {
-    const prisma = await getPrisma();
-    const leads = await prisma.lead.findMany({
-      orderBy: { createdAt: "desc" }
-    });
-    return NextResponse.json({ leads });
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch leads" }, { status: 500 });
-  }
-}
+const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
 export async function POST(request: Request) {
+  let body: Record<string, unknown>;
   try {
-    const prisma = await getPrisma();
-    const { name, email, interest, message } = await request.json();
-    
-    if (!name || !email || !message) {
-      return NextResponse.json({ error: "Faltan campos obligatorios" }, { status: 400 });
-    }
-
-    // 1. Guardar en la base de datos
-    const lead = await prisma.lead.create({
-      data: { name, email, interest: interest || "General", message },
-    });
-
-    // 2. Enviar email de notificación (no bloquea si falla)
-    await sendLeadNotification({ name, email, interest: interest || "General", message });
-
-    return NextResponse.json({ success: true, lead });
+    body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Error al guardar el mensaje" }, { status: 500 });
+    return NextResponse.json({ error: "Solicitud inválida" }, { status: 400 });
   }
+
+  const lead = {
+    name: clean(body.name, 120),
+    email: clean(body.email, 160),
+    phone: clean(body.phone, 40),
+    interest: clean(body.interest, 80) || "General",
+    message: clean(body.message, 4000),
+  };
+
+  if (!lead.name || !lead.message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(lead.email)) {
+    return NextResponse.json({ error: "Faltan nombre, correo válido o mensaje" }, { status: 400 });
+  }
+
+  const sent = await sendLeadNotification(lead);
+  if (!sent) {
+    return NextResponse.json({ error: "No se pudo enviar el correo" }, { status: 502 });
+  }
+  return NextResponse.json({ success: true });
 }
