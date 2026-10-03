@@ -1,19 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
 
-const archivo = Archivo({
+const poppins = Poppins({
   subsets: ["latin"],
-  axes: ["wdth"],
-  variable: "--font-archivo",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-poppins",
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "SOLPOWER X | Ingeniería eléctrica y solar en Colombia",
+    default: "SOLPOWER X | Energía solar e ingeniería eléctrica en Colombia",
     template: "%s | SOLPOWER X",
   },
   description: site.description,
@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   keywords: [
     "SOLPOWER X",
     "SolPowerX",
+    "paneles solares Colombia",
+    "sistema solar híbrido",
+    "BESS baterías",
+    "Ley 1715 beneficios",
     "memoria de cálculo RETIE",
     "certificación RETIE",
     "diseño eléctrico Colombia",
@@ -39,13 +43,13 @@ export const metadata: Metadata = {
     locale: "es_CO",
     url: "/",
     siteName: site.name,
-    title: "SOLPOWER X | Ingeniería eléctrica y solar en Colombia",
+    title: "SOLPOWER X | Energía solar e ingeniería eléctrica en Colombia",
     description: site.description,
     images: [{ url: "/logo-completo.png", width: 800, height: 527, alt: "SOLPOWER X" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SOLPOWER X | Ingeniería eléctrica y solar",
+    title: "SOLPOWER X | Energía solar en Colombia",
     description: site.description,
     images: ["/logo-completo.png"],
   },
@@ -87,7 +91,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es-CO" className={archivo.variable}>
+    <html lang="es-CO" className={poppins.variable}>
       <body>
         <script
           type="application/ld+json"

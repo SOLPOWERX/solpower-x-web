@@ -9,5 +9,5 @@ export const site = {
   email: "solpowerx@hotmail.com",
   engineer: "Uriel Antonio Gutiérrez",
   description:
-    "Ingeniería eléctrica en Colombia: memorias de cálculo y certificación RETIE, sistemas solares on-grid y off-grid, subestaciones y redes de media y baja tensión.",
+    "Sistemas solares on-grid, off-grid, híbridos y BESS en Colombia con análisis técnico-financiero, legalización y certificación RETIE. Ingeniería eléctrica: redes, subestaciones y calidad de energía.",
 };

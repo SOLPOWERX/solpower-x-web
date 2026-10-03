@@ -1,8 +1,12 @@
 import Header from "@/components/site/Header";
 import Hero from "@/components/site/Hero";
-import EnergyPath from "@/components/site/EnergyPath";
+import Manifesto from "@/components/site/Manifesto";
+import Solutions from "@/components/site/Solutions";
+import Analysis from "@/components/site/Analysis";
 import Process from "@/components/site/Process";
-import Standards from "@/components/site/Standards";
+import Engineering from "@/components/site/Engineering";
+import Trust from "@/components/site/Trust";
+import Faq from "@/components/site/Faq";
 import Contact from "@/components/site/Contact";
 import Footer from "@/components/site/Footer";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
@@ -15,9 +19,13 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
-        <EnergyPath />
+        <Manifesto />
+        <Solutions />
+        <Analysis />
         <Process />
-        <Standards />
+        <Engineering />
+        <Trust />
+        <Faq />
         <Contact />
       </main>
       <Footer />

@@ -5,6 +5,7 @@ export interface LeadEmailData {
   name: string;
   email: string;
   phone: string;
+  company: string;
   interest: string;
   message: string;
 }
@@ -37,6 +38,7 @@ export async function sendLeadNotification(lead: LeadEmailData): Promise<boolean
     ${row("Nombre", esc(lead.name))}
     ${row("Correo", `<a href="mailto:${esc(lead.email)}">${esc(lead.email)}</a>`)}
     ${row("Teléfono", esc(lead.phone) || "No indicado")}
+    ${row("Empresa", esc(lead.company) || "No indicada")}
     ${row("Servicio", esc(lead.interest))}
   </table>
   <div style="margin:0 24px 24px;padding:16px;background:#f3f6fa;border-radius:8px;white-space:pre-wrap;color:#0b1b33;line-height:1.5">${esc(lead.message)}</div>

@@ -1,55 +1,46 @@
 @import "tailwindcss";
 
-/* SOLPOWER X — lenguaje visual de plano eléctrico (diagrama unifilar) */
 @theme {
-  --color-noche: #071733;
   --color-azul: #0d2b5e;
+  --color-azul-900: #071a3d;
+  --color-azul-950: #040f26;
+  --color-cielo: #3b82c4;
   --color-sol: #f0a500;
-  --color-sol-claro: #ffc94d;
-  --color-papel: #f3f6fa;
-  --color-linea: #7f96c2;
-  --color-tinta: #0b1b33;
-  --color-niebla: #c9d4e8;
+  --color-sol-claro: #ffc23d;
+  --color-humo: #f4f6fa;
+  --color-tinta: #0f1f3a;
+  --color-gris: #5a6782;
 
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-sans: var(--font-poppins), system-ui, sans-serif;
 }
 
 @layer base {
-  html {
-    scroll-behavior: auto;
-  }
   body {
-    @apply bg-papel text-tinta antialiased;
+    @apply bg-white text-tinta antialiased;
     font-family: var(--font-sans);
   }
   ::selection {
     background: var(--color-sol);
-    color: var(--color-noche);
+    color: var(--color-azul-950);
   }
   :focus-visible {
     outline: 2px solid var(--color-sol);
     outline-offset: 3px;
-    border-radius: 4px;
   }
 }
 
-@layer utilities {
-  /* Títulos en ancho expandido: la tipografía de rótulo de plano */
-  .display {
-    font-stretch: 125%;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 0.98;
+@layer components {
+  .btn-sol {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-sol to-sol-claro px-7 py-3.5 font-semibold text-azul-950 shadow-[0_10px_30px_-10px_rgba(240,165,0,.7)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-10px_rgba(240,165,0,.9)];
   }
-  .wide {
-    font-stretch: 112%;
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-7 py-3.5 font-semibold text-white backdrop-blur-sm transition-all duration-300 hover:bg-white hover:text-azul;
   }
-  /* Retícula de plano, muy tenue */
-  .blueprint {
-    background-image:
-      linear-gradient(rgba(127, 150, 194, 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(127, 150, 194, 0.08) 1px, transparent 1px);
-    background-size: 48px 48px;
+  .title {
+    @apply text-[clamp(2rem,4.6vw,3.6rem)] font-bold leading-[1.1] tracking-tight;
+  }
+  .glass {
+    @apply border border-white/25 bg-white/10 backdrop-blur-xl;
   }
 }
 
@@ -62,29 +53,25 @@ html.lenis body {
   overscroll-behavior: contain;
 }
 
+/* Franja infinita de marcas */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+.marquee {
+  animation: marquee 32s linear infinite;
+}
+.marquee:hover {
+  animation-play-state: paused;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
 }
-
-/* Entrada de la portada: un único momento orquestado al cargar */
-@keyframes hero-in {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.hero-in {
-  animation: hero-in 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-}
-.hero-in:nth-child(2) { animation-delay: 0.08s; }
-.hero-in:nth-child(3) { animation-delay: 0.2s; }
-.hero-in:nth-child(4) { animation-delay: 0.3s; }
