@@ -39,10 +39,10 @@ export default function Process() {
         <div className="lg:sticky lg:top-28 lg:self-start">
           <p className="mb-4 font-semibold text-sol">Cómo trabajamos</p>
           <h2 className="title text-azul">
-            De tu factura a tu <span className="text-sol">certificado RETIE</span>
+            De tu factura a tu <span className="text-sol">sistema funcionando</span>
           </h2>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-gris">
-            Un solo equipo se encarga de todo el camino. Tú recibes el sistema funcionando, legalizado y certificado.
+            Un solo equipo se encarga de todo el camino. Tú recibes el sistema certificado, legalizado y generando energía.
           </p>
           <div className="relative mt-10 hidden aspect-[4/3] overflow-hidden rounded-[28px] lg:block">
             <Image

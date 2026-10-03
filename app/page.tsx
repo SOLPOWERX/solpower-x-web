@@ -5,6 +5,7 @@ import Solutions from "@/components/site/Solutions";
 import Analysis from "@/components/site/Analysis";
 import Process from "@/components/site/Process";
 import Engineering from "@/components/site/Engineering";
+import Clients from "@/components/site/Clients";
 import Trust from "@/components/site/Trust";
 import Faq from "@/components/site/Faq";
 import Contact from "@/components/site/Contact";
@@ -24,6 +25,7 @@ export default function Home() {
         <Analysis />
         <Process />
         <Engineering />
+        <Clients />
         <Trust />
         <Faq />
         <Contact />

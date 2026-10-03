@@ -1,30 +1,46 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { site } from "@/lib/site";
+import Logo from "./Logo";
 
 const links = [
   { href: "#soluciones", label: "Energía solar" },
   { href: "#analisis", label: "Análisis financiero" },
   { href: "#ingenieria", label: "Ingeniería" },
+  { href: "#clientes", label: "Clientes" },
   { href: "#preguntas", label: "Preguntas" },
 ];
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState<string | null>(null);
+  const lastY = useRef(0);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 40);
+      // Se esconde al bajar y reaparece al subir
+      setHidden(y > 300 && y > lastY.current + 4);
+      if (y < lastY.current - 4 || y < 300) setHidden(false);
+      lastY.current = y;
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-5">
+    <motion.header
+      className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-5"
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: hidden && !open ? -110 : 0, opacity: 1 }}
+      transition={{ duration: 0.5, ease: [0.2, 0.8, 0.2, 1] }}
+    >
       <nav
         className={`mx-auto flex max-w-6xl items-center justify-between rounded-full px-3 py-2 transition-all duration-500 md:px-4 ${
           scrolled
@@ -32,35 +48,47 @@ export default function Header() {
             : "bg-white/15 backdrop-blur-md"
         }`}
       >
-        <a href="#inicio" className="flex items-center gap-2.5" aria-label="SOLPOWER X, inicio">
-          <span className="grid h-10 w-10 place-items-center rounded-full bg-white p-1.5 shadow-sm">
-            <Image src="/isotipo.png" alt="" width={32} height={28} priority />
-          </span>
-          <span
-            className={`whitespace-nowrap text-lg font-bold tracking-tight transition-colors ${
-              scrolled ? "text-azul" : "text-white"
-            }`}
-          >
-            SOLPOWER <span className="text-sol">X</span>
-          </span>
+        <a href="#inicio" aria-label="SOLPOWER X, inicio">
+          <Logo light={!scrolled} />
         </a>
 
         <ul
-          className={`hidden items-center gap-7 text-sm font-medium lg:flex ${scrolled ? "text-tinta" : "text-white"}`}
+          className={`hidden items-center text-sm font-medium lg:flex ${scrolled ? "text-tinta" : "text-white"}`}
+          onMouseLeave={() => setHover(null)}
         >
-          {links.map((l) => (
-            <li key={l.href}>
-              <a href={l.href} className="relative py-1 transition-colors hover:text-sol">
+          {links.map((l, i) => (
+            <motion.li
+              key={l.href}
+              className="relative"
+              initial={{ opacity: 0, y: -12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + i * 0.07, duration: 0.5 }}
+              onMouseEnter={() => setHover(l.href)}
+            >
+              {hover === l.href && (
+                <motion.span
+                  layoutId="nav-pill"
+                  className={`absolute inset-0 rounded-full ${scrolled ? "bg-azul/[.07]" : "bg-white/20"}`}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+              <a href={l.href} className="relative block px-4 py-2 transition-colors hover:text-sol">
                 {l.label}
               </a>
-            </li>
+            </motion.li>
           ))}
         </ul>
 
         <div className="flex items-center gap-2">
-          <a href="#contacto" className="btn-sol hidden !px-5 !py-2.5 text-sm sm:inline-flex">
+          <motion.a
+            href="#contacto"
+            className="btn-sol shine hidden !px-5 !py-2.5 text-sm sm:inline-flex"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.9, type: "spring", stiffness: 200, damping: 15 }}
+          >
             Cotizar proyecto
-          </a>
+          </motion.a>
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -85,22 +113,25 @@ export default function Header() {
             exit={{ clipPath: "circle(0% at 95% 4%)" }}
             transition={{ duration: 0.6, ease: [0.7, 0, 0.2, 1] }}
           >
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Cerrar menú"
-              className="ml-auto grid h-11 w-11 place-items-center rounded-full bg-white/10"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-              </svg>
-            </button>
+            <div className="flex items-center justify-between">
+              <Logo />
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar menú"
+                className="grid h-11 w-11 place-items-center rounded-full bg-white/10"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
+                  <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
             <ul className="mt-10 space-y-2">
               {[...links, { href: "#contacto", label: "Contacto" }].map((l, i) => (
                 <motion.li
                   key={l.href}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15 + i * 0.06 }}
                 >
                   <a href={l.href} onClick={() => setOpen(false)} className="block py-2 text-4xl font-semibold">
@@ -113,13 +144,13 @@ export default function Header() {
               href={`${site.whatsapp}un%20proyecto`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn-sol mt-auto"
+              className="btn-sol shine mt-auto"
             >
               Escribir por WhatsApp
             </a>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+    </motion.header>
   );
 }

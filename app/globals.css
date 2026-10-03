@@ -75,3 +75,30 @@ html.lenis body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Brillo que recorre la X del logo cada pocos segundos */
+@keyframes x-shine {
+  0%, 70% { background-position: 100% 0; }
+  100% { background-position: -50% 0; }
+}
+.logo-x {
+  animation: x-shine 4.5s ease-in-out 1.6s infinite;
+}
+
+/* Destello que cruza el botón de cotizar */
+@keyframes btn-shine {
+  0%, 75% { transform: translateX(-120%) skewX(-20deg); }
+  100% { transform: translateX(260%) skewX(-20deg); }
+}
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: btn-shine 3.8s ease-in-out 2s infinite;
+}

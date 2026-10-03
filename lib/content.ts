@@ -71,12 +71,12 @@ export const process = [
     body: "Simulamos la producción en PVsyst y entregamos planos de planta, diagrama unifilar y memorias de cálculo.",
   },
   {
-    title: "Legalización",
-    body: "Gestionamos la conexión y la entrega de excedentes ante el operador de red: Celsia, Enel, EPM, Air-e y otros.",
-  },
-  {
     title: "Certificación RETIE",
     body: "Acompañamos la inspección hasta obtener el certificado emitido por un organismo acreditado ante ONAC.",
+  },
+  {
+    title: "Legalización",
+    body: "Gestionamos la conexión y la entrega de excedentes ante el operador de red: Celsia, Enel, EPM, Air-e y otros.",
   },
 ];
 
@@ -154,5 +154,16 @@ export const faqs = [
   {
     q: "¿En qué ciudades trabajan?",
     a: "En toda Colombia. Las visitas técnicas se programan según la ubicación del proyecto.",
+  },
+];
+
+/** Empresas que confían en SOLPOWER X. Para agregar un cliente: pon su logo en public/clientes y añádelo aquí. */
+export const clients = [
+  {
+    name: "MC4 Solar",
+    logo: "/clientes/mc4-solar.png",
+    url: "https://mc4energiasolar.com/",
+    project: "Sistema solar residencial en Sopó, Cundinamarca",
+    work: "Diseño eléctrico AC, declaraciones de cumplimiento RETIE de diseño y construcción y cierre de no conformidades de la inspección.",
   },
 ];
