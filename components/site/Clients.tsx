@@ -34,15 +34,15 @@ export default function Clients() {
             </ul>
           </div>
         ) : (
-          <div className="mt-14 grid gap-6">
-            {clients.map((c) => (
+          <div className="mx-auto mt-14 grid max-w-4xl gap-6 sm:grid-cols-2">
+            {clients.map((c, i) => (
               <motion.article
                 key={c.name}
                 initial={{ opacity: 0, y: 60, scale: 0.96 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
-                className="grid overflow-hidden rounded-[32px] border border-azul/10 bg-white shadow-[0_40px_80px_-45px_rgba(13,43,94,.55)] md:grid-cols-[1fr_1.2fr]"
+                transition={{ duration: 0.9, delay: i * 0.12, ease: [0.2, 0.8, 0.2, 1] }}
+                className="overflow-hidden rounded-[32px] border border-azul/10 bg-white shadow-[0_40px_80px_-45px_rgba(13,43,94,.55)]"
               >
                 <a
                   href={c.url}
@@ -73,12 +73,6 @@ export default function Clients() {
                     />
                   </motion.span>
                 </a>
-                <div className="flex flex-col justify-center p-8 md:p-12">
-                  <span className="mb-4 self-start rounded-full bg-sol/15 px-4 py-1.5 text-sm font-semibold text-azul">Proyecto realizado</span>
-                  <h3 className="text-2xl font-bold text-azul md:text-3xl">{c.project}</h3>
-                  <p className="mt-4 text-lg leading-relaxed text-gris">{c.work}</p>
-                  <p className="mt-6 text-sm font-semibold text-azul">{c.name}</p>
-                </div>
               </motion.article>
             ))}
           </div>

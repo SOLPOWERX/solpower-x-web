@@ -159,11 +159,6 @@ export const faqs = [
 
 /** Empresas que confían en SOLPOWER X. Para agregar un cliente: pon su logo en public/clientes y añádelo aquí. */
 export const clients = [
-  {
-    name: "MC4 Solar",
-    logo: "/clientes/mc4-solar.png",
-    url: "https://mc4energiasolar.com/",
-    project: "Sistema solar residencial en Sopó, Cundinamarca",
-    work: "Diseño eléctrico AC, declaraciones de cumplimiento RETIE de diseño y construcción y cierre de no conformidades de la inspección.",
-  },
+  { name: "MC4 Solar", logo: "/clientes/mc4-solar.png", url: "https://mc4energiasolar.com/" },
+  { name: "Xantia Xamuels", logo: "/clientes/xantia-xamuels.png", url: "https://xantia-xamuels.com/" },
 ];
