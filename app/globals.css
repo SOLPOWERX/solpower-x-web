@@ -102,3 +102,51 @@ html.lenis body {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent);
   animation: btn-shine 3.8s ease-in-out 2s infinite;
 }
+
+/* Barra superior: destello de energía que recorre el borde */
+@property --nav-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+@keyframes nav-spin {
+  to { --nav-angle: 360deg; }
+}
+.nav-ring {
+  position: relative;
+  isolation: isolate;
+}
+.nav-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  padding: 1px;
+  border-radius: inherit;
+  background:
+    conic-gradient(from var(--nav-angle), transparent 0 62%, rgba(255, 194, 61, 0.15) 70%, #ffc23d 82%, #fff3cf 85%, transparent 92%),
+    linear-gradient(rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: nav-spin 6s linear infinite;
+  pointer-events: none;
+}
+
+/* Enlaces del menú: las letras ruedan y aparece la copia dorada */
+.roll {
+  display: inline-flex;
+  overflow: hidden;
+  line-height: 1.25;
+}
+.roll > span {
+  display: inline-block;
+  transition: transform 0.45s cubic-bezier(0.7, 0, 0.2, 1);
+  transition-delay: calc(var(--i) * 18ms);
+  text-shadow: 0 1.25em 0 #ffc23d;
+}
+.group:hover .roll > span,
+.group:focus-visible .roll > span,
+.roll.is-open > span {
+  transform: translateY(-1.25em);
+}
