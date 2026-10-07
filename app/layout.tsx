@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { site } from "@/lib/site";
+import AdsTracking from "@/components/site/AdsTracking";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -98,6 +99,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         {children}
+        <AdsTracking />
       </body>
     </html>
   );
