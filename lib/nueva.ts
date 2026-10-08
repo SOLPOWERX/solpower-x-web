@@ -1,9 +1,10 @@
 /** Contenido de la portada de prueba (/nueva). Para cambiar textos o fotos, edita este archivo. */
 
-import { engineering, media } from "./content";
-import { empresasMedia, waEmpresas } from "./empresas";
+import { engineering, solar } from "./content";
+import { waEmpresas } from "./empresas";
 
-const u = (id: string) => `https://images.unsplash.com/${id}?w=1200&q=70&auto=format`;
+/** Imágenes propias: vistas de nuestras escenas 3D (public/render). Nada de fotos de bancos de imágenes. */
+const r = (n: string) => `/render/${n}.jpg`;
 
 export { waEmpresas };
 
@@ -16,7 +17,7 @@ export const puertas = [
     points: ["Estudio con su factura, sin costo", "Deducción de renta del 50 % (Ley 1715)", "Respaldo para cargas críticas"],
     cta: "Ver soluciones para empresas",
     href: "/empresas",
-    image: u("photo-1613665813446-82a78c468a1d"),
+    image: r("empresas"),
   },
   {
     kicker: "02 · Hogares",
@@ -25,7 +26,7 @@ export const puertas = [
     points: ["Paneles en el techo de su casa", "Baterías para no quedarse sin luz", "Instalación y legalización completas"],
     cta: "Ver soluciones para el hogar",
     href: "/hogares",
-    image: u("photo-1600585154340-be6161a56a0c"),
+    image: r("hogares"),
   },
   {
     kicker: "03 · Ingeniería",
@@ -34,7 +35,7 @@ export const puertas = [
     points: ["Diseño PVsyst y memorias RETIE", "Subestaciones y redes de media y baja tensión", "Calidad de energía"],
     cta: "Ver servicios de ingeniería",
     href: "/ingenieria",
-    image: `${engineering[1].image}?w=1200&q=70&auto=format`,
+    image: r("ingenieria"),
   },
 ];
 
@@ -111,7 +112,7 @@ export const ingenierias = [
     kicker: "Para clientes e instaladores",
     title: "Ingeniería solar",
     body: "Todo lo técnico de un proyecto solar, con diseño y firma de ingeniería eléctrica.",
-    image: `${media.engineerRoof}?w=1400&q=70&auto=format`,
+    image: r("ing-solar"),
     items: [
       { title: "Diseño y simulación PVsyst", body: "Producción esperada, pérdidas y tamaño óptimo del sistema." },
       { title: "Planos y memorias de cálculo RETIE", body: "Diagrama unifilar, protecciones, cableado y puesta a tierra." },
@@ -124,12 +125,19 @@ export const ingenierias = [
     kicker: "Otros servicios",
     title: "Servicios de ingeniería eléctrica",
     body: "Infraestructura eléctrica segura y con cumplimiento normativo, del poste al tablero.",
-    image: `${engineering[1].image}?w=1400&q=70&auto=format`,
+    image: r("subestaciones"),
     items: engineering.map((e) => ({ title: e.title, body: e.body })),
   },
 ];
 
-export const cierre = {
-  video: media.heroVideo,
-  poster: `${empresasMedia.cierre}&w=1600`,
-};
+export const cierre = { imagen: r("cierre") };
+export const imagenNosotros = r("nosotros");
+export const imagenContacto = r("contacto");
+
+/** Soluciones solares de la portada nueva, cada una con su imagen 3D. */
+const imgSolucion: Record<string, string> = { "on-grid": r("ongrid"), "off-grid": r("offgrid"), hibridos: r("hibrido"), bess: r("bess"), "gran-escala": r("granja") };
+export const solucionesNueva = solar.map((s) => ({ ...s, image: imgSolucion[s.id] ?? s.image }));
+
+/** Servicios de ingeniería eléctrica para el menú, con su imagen 3D. */
+const imgIngenieria = [r("redes"), r("subestaciones"), r("instalaciones"), r("retie"), r("calidad")];
+export const ingenieriaNueva = engineering.map((e, i) => ({ ...e, image: imgIngenieria[i] ?? e.image }));

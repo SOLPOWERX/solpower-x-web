@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { media, values } from "@/lib/content";
+import { values } from "@/lib/content";
+import { imagenNosotros } from "@/lib/nueva";
 import { site } from "@/lib/site";
 
 export default function Nosotros() {
@@ -16,7 +17,7 @@ export default function Nosotros() {
           viewport={{ once: true, margin: "-15%" }}
           transition={{ duration: 1.2, ease: [0.7, 0, 0.2, 1] }}
         >
-          <Image src={`${media.aerialRows}?w=1400&q=70&auto=format`} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          <Image src={imagenNosotros} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
           <span className="absolute inset-0 bg-gradient-to-t from-azul-950/90 via-azul-950/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-4 p-7 text-white">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white p-2">

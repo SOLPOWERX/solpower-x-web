@@ -18,6 +18,7 @@ import Footer from "@/components/site/Footer";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
 import SmoothScroll from "@/components/site/SmoothScroll";
 import VolverArriba from "@/components/nueva/VolverArriba";
+import { imagenContacto, solucionesNueva } from "@/lib/nueva";
 
 /** Portada de PRUEBA. No reemplaza la página principal; no se indexa en Google. */
 export const metadata: Metadata = {
@@ -37,14 +38,14 @@ export default function NuevaPortada() {
         <Buscador />
         <Manifesto />
         <Analysis />
-        <Solutions />
+        <Solutions items={solucionesNueva} />
         <IngenieriaDos />
         <Clients />
         <Ley1715 />
         <Nosotros />
         <Faq />
         <Cierre />
-        <Contact />
+        <Contact imagen={imagenContacto} />
       </main>
       <Footer />
       <WhatsAppFloat />

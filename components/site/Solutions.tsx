@@ -8,7 +8,7 @@ import { solar } from "@/lib/content";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function Solutions() {
+export default function Solutions({ items = solar }: { items?: typeof solar }) {
   const root = useRef<HTMLElement>(null);
   const track = useRef<HTMLDivElement>(null);
 
@@ -89,7 +89,7 @@ export default function Solutions() {
             </div>
           </div>
 
-          {solar.map((s) => (
+          {items.map((s) => (
             <article
               key={s.id}
               id={s.id}
@@ -97,7 +97,7 @@ export default function Solutions() {
             >
               <div className="sol-img absolute inset-[-2%] lg:inset-y-0 lg:-inset-x-[10%]">
                 <Image
-                  src={`${s.image}?w=1600&q=70&auto=format`}
+                  src={s.image.startsWith("/") ? s.image : `${s.image}?w=1600&q=70&auto=format`}
                   alt={s.title}
                   fill
                   sizes="(min-width: 1024px) 70vw, 100vw"

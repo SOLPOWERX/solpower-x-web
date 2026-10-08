@@ -4,8 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
 import { site } from "@/lib/site";
-import { engineering, solar } from "@/lib/content";
-import { ingenierias } from "@/lib/nueva";
+import { ingenierias, ingenieriaNueva, solucionesNueva } from "@/lib/nueva";
 import Logo from "@/components/site/Logo";
 import { useIntroListo } from "./Intro";
 
@@ -38,7 +37,7 @@ const mega: Record<MegaKey, Mega> = {
     title: "Sistemas para cada necesidad",
     body: "Diseño RETIE, simulación PVsyst y análisis financiero en cada proyecto.",
     cta: { href: "#calculadora", label: "Calcular mi ahorro" },
-    items: solar.map((s) => ({ title: s.title, tag: s.tag, image: s.image, href: "#soluciones" })),
+    items: solucionesNueva.map((s) => ({ title: s.title, tag: s.tag, image: s.image, href: "#soluciones" })),
   },
   ingenieria: {
     kicker: "Ingeniería solar",
@@ -47,7 +46,7 @@ const mega: Record<MegaKey, Mega> = {
     cta: { href: "/ingenieria#solar", label: "Ver ingeniería solar" },
     lista: ingenierias[0].items,
     itemsTitle: "Servicios de ingeniería eléctrica",
-    items: engineering.map((e, i) => ({ title: e.title, tag: `0${i + 1}`, image: e.image, href: "/ingenieria#electrica" })),
+    items: ingenieriaNueva.map((e, i) => ({ title: e.title, tag: `0${i + 1}`, image: e.image, href: "/ingenieria#electrica" })),
   },
 };
 
@@ -382,7 +381,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                         className="group relative block h-56 overflow-hidden rounded-[18px] ring-1 ring-inset ring-white/10"
                       >
                         <Image
-                          src={`${it.image}?w=500&q=65&auto=format`}
+                          src={it.image}
                           alt=""
                           fill
                           sizes="200px"

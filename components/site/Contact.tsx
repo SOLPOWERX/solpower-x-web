@@ -22,7 +22,7 @@ type Status = "idle" | "sending" | "sent" | "error";
 const field =
   "w-full rounded-xl border border-azul/15 bg-humo px-4 py-3.5 text-tinta outline-none transition focus:border-sol focus:bg-white focus:ring-4 focus:ring-sol/15";
 
-export default function Contact() {
+export default function Contact({ imagen }: { imagen?: string }) {
   const [status, setStatus] = useState<Status>("idle");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -47,7 +47,7 @@ export default function Contact() {
     <section id="contacto" className="bg-white py-24 md:py-32">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[32px] shadow-[0_40px_90px_-40px_rgba(13,43,94,.55)] lg:grid-cols-[0.9fr_1.1fr]">
         <div className="relative min-h-[420px] p-8 text-white md:p-12">
-          <Image src={`${media.heroPoster}?w=1400&q=70&auto=format`} alt="" fill sizes="50vw" className="object-cover" />
+          <Image src={imagen ?? `${media.heroPoster}?w=1400&q=70&auto=format`} alt="" fill sizes="50vw" className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-br from-azul/95 via-azul/85 to-azul-950/90" />
           <div className="relative flex h-full flex-col">
             <p className="mb-4 font-semibold text-sol">Contáctanos</p>
