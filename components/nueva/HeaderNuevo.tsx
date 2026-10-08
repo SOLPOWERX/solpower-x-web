@@ -13,7 +13,7 @@ type MegaKey = "solar" | "ingenieria";
 
 const links: { href: string; label: string; mega?: MegaKey }[] = [
   { href: "/empresas", label: "Empresas" },
-  { href: "#puertas", label: "Hogares" },
+  { href: "/hogares", label: "Hogares" },
   { href: "#ingenieria", label: "Ingeniería", mega: "ingenieria" },
   { href: "#soluciones", label: "Soluciones", mega: "solar" },
   { href: "#ley-1715", label: "Beneficios Ley 1715" },

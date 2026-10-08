@@ -24,7 +24,7 @@ export const puertas = [
     body: "Pague menos luz y tenga respaldo cuando se va la energía.",
     points: ["Paneles en el techo de su casa", "Baterías para no quedarse sin luz", "Instalación y legalización completas"],
     cta: "Ver soluciones para el hogar",
-    href: "#calculadora",
+    href: "/hogares",
     image: u("photo-1600585154340-be6161a56a0c"),
   },
   {
