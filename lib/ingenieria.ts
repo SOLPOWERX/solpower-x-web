@@ -9,9 +9,9 @@ export const waInstaladores = `https://wa.me/573123312334?text=${encodeURICompon
 
 /** Ingeniería solar: para clientes finales e instaladores. */
 export const ingenieriaSolar = [
-  { title: "Diseño y simulación PVsyst", body: "Producción esperada, pérdidas, sombras y el tamaño óptimo del sistema." },
+  { title: "Diseño y simulación de producción", body: "Producción esperada, pérdidas, sombras y el tamaño óptimo del sistema." },
   { title: "Planos y memorias de cálculo RETIE", body: "Diagrama unifilar, protecciones, cableado, puesta a tierra y apantallamiento." },
-  { title: "Legalización ante el operador", body: "Trámite de conexión y entrega de excedentes (CREG 174) con Enel, Celsia, EPM y otros." },
+  { title: "Legalización ante el operador", body: "Trámite de conexión y entrega de excedentes (CREG 174) con el operador de red de su zona." },
   { title: "Apoyo a instaladores", body: "Usted instala y nosotros entregamos la ingeniería completa, firmada por ingeniero." },
 ];
 

@@ -7,6 +7,7 @@ import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
+import { Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, c01, texturaCeldas, texturaMalla, texturaRejilla, texturaSenal, tramo, type Momento, type Zona } from "./comun";
 
 /*
@@ -351,27 +352,141 @@ function CuartoCeldas() {
   );
 }
 
-/* ---------- Pequeña planta solar del proyecto ---------- */
+/* ---------- Planta solar del proyecto: mesas con estructura, inversores, tablero AC y estación de monitoreo ---------- */
 
-function PlantaSolar() {
-  const ref = useRef<THREE.InstancedMesh>(null);
+const MESAS_Z = [-5, -0.4, 4.2];
+const PANEL_X0 = 12.9;
+const N_COL = 11;
+const PAN_A = 1.0; // ancho del panel
+const PAN_L = 1.7; // largo del panel (en la pendiente)
+const TILT = 0.21; // ~12°
+const Y_FRENTE = 0.75;
+/** Punto sobre la mesa: `u` a lo largo (x), `v` en la pendiente (0 = borde de abajo, 1 = arriba). */
+const enMesa = (zc: number, x: number, v: number, sobre = 0): [number, number, number] => {
+  const prof = 2 * PAN_L;
+  const d = (v - 0.5) * prof; // positivo hacia el borde de arriba (atrás, −z)
+  return [x, Y_FRENTE + (prof / 2) * Math.sin(TILT) + d * Math.sin(TILT) + sobre, zc - d * Math.cos(TILT)];
+};
+
+function PlantaSolar({ energia }: { energia: () => number }) {
+  const panelesRef = useRef<THREE.InstancedMesh>(null);
+  const m = useMaterialesEquipos();
+  useLedsEquipos(m, energia);
   const cara = useMemo(() => new THREE.MeshStandardMaterial({ map: texturaCeldas(true), metalness: 0.45, roughness: 0.18 }), []);
+  const prof = 2 * PAN_L;
+  const xs = Array.from({ length: 6 }, (_, i) => PANEL_X0 - 0.3 + i * ((N_COL * PAN_A + 0.6) / 5));
+
   useLayoutEffect(() => {
-    const m = new THREE.Object3D();
+    const o = new THREE.Object3D();
     let n = 0;
-    for (let f = 0; f < 4; f++)
-      for (let i = 0; i < 8; i++) {
-        m.position.set(13.5 + i * 1.08, 1.1, -6 + f * 3.2);
-        m.rotation.set(-0.3, 0, 0);
-        m.updateMatrix();
-        ref.current!.setMatrixAt(n++, m.matrix);
-      }
-    ref.current!.instanceMatrix.needsUpdate = true;
+    for (const zc of MESAS_Z)
+      for (let f = 0; f < 2; f++)
+        for (let i = 0; i < N_COL; i++) {
+          const v = (f + 0.5) / 2;
+          const [x, y, z] = enMesa(zc, PANEL_X0 + i * (PAN_A + 0.02), v, 0.08);
+          o.position.set(x, y, z);
+          o.rotation.set(TILT, 0, 0);
+          o.updateMatrix();
+          panelesRef.current!.setMatrixAt(n++, o.matrix);
+        }
+    panelesRef.current!.instanceMatrix.needsUpdate = true;
   }, []);
+
+  const yBajo = Y_FRENTE;
+  const yAlto = Y_FRENTE + prof * Math.sin(TILT);
   return (
-    <instancedMesh ref={ref} args={[undefined, undefined, 32]} material={cara} castShadow receiveShadow>
-      <boxGeometry args={[1.02, 0.04, 1.7]} />
-    </instancedMesh>
+    <group>
+      <instancedMesh ref={panelesRef} args={[undefined, undefined, MESAS_Z.length * 2 * N_COL]} material={cara} castShadow receiveShadow>
+        <boxGeometry args={[PAN_A, 0.04, PAN_L]} />
+      </instancedMesh>
+      {MESAS_Z.map((zc) => {
+        const zF = zc + (prof / 2) * Math.cos(TILT);
+        const zA = zc - (prof / 2) * Math.cos(TILT);
+        return (
+          <group key={zc}>
+            {xs.map((x) => (
+              <group key={x}>
+                {/* Poste delantero (bajo) y trasero (alto) con su dado de concreto */}
+                <mesh position={[x, (yBajo - 0.08) / 2, zF - 0.25]} material={m.galvanizado} castShadow>
+                  <boxGeometry args={[0.07, yBajo - 0.08, 0.07]} />
+                </mesh>
+                <mesh position={[x, (yAlto - 0.08) / 2, zA + 0.25]} material={m.galvanizado} castShadow>
+                  <boxGeometry args={[0.07, yAlto - 0.08, 0.07]} />
+                </mesh>
+                {[zF - 0.25, zA + 0.25].map((z) => (
+                  <mesh key={z} position={[x, 0.08, z]} material={m.gris}>
+                    <cylinderGeometry args={[0.13, 0.15, 0.16, 10]} />
+                  </mesh>
+                ))}
+                {/* Viga inclinada y riostra diagonal */}
+                <mesh position={[x, (yBajo + yAlto) / 2 - 0.05, zc]} rotation={[TILT, 0, 0]} material={m.galvanizado} castShadow>
+                  <boxGeometry args={[0.06, 0.08, prof - 0.2]} />
+                </mesh>
+                <mesh position={[x, (yAlto * 0.55) / 1.1, zc]} rotation={[-0.62, 0, 0]} material={m.galvanizado}>
+                  <boxGeometry args={[0.04, 0.04, prof * 0.55]} />
+                </mesh>
+              </group>
+            ))}
+            {/* Rieles (correas) a lo largo de la mesa */}
+            {[0.12, 0.38, 0.62, 0.88].map((v) => {
+              const [, y, z] = enMesa(zc, 0, v, 0.02);
+              return (
+                <mesh key={v} position={[PANEL_X0 + ((N_COL - 1) * (PAN_A + 0.02)) / 2, y, z]} material={m.plata} castShadow>
+                  <boxGeometry args={[N_COL * (PAN_A + 0.02) + 0.5, 0.05, 0.05]} />
+                </mesh>
+              );
+            })}
+            {/* Inversor de la mesa, en su soporte al costado oeste */}
+            <group position={[PANEL_X0 - 1.05, 0, zc + 0.9]}>
+              {[-0.32, 0.32].map((dz) => (
+                <mesh key={dz} position={[0, 0.85, dz]} material={m.galvanizado} castShadow>
+                  <boxGeometry args={[0.06, 1.7, 0.06]} />
+                </mesh>
+              ))}
+              {[0.6, 1.5].map((y) => (
+                <mesh key={y} position={[0, y, 0]} material={m.galvanizado}>
+                  <boxGeometry args={[0.05, 0.05, 0.74]} />
+                </mesh>
+              ))}
+              <mesh position={[-0.05, 1.82, 0]} rotation={[0, 0, -0.25]} material={m.plata} castShadow>
+                <boxGeometry args={[0.55, 0.025, 0.9]} />
+              </mesh>
+              <Inversor m={m} position={[-0.17, 1.1, 0]} rotation={[0, -Math.PI / 2, 0]} />
+            </group>
+          </group>
+        );
+      })}
+      {/* Estación de monitoreo (piranómetro y sensor de temperatura) */}
+      <group position={[24.6, 0, 7]}>
+        <mesh position={[0, 1.4, 0]} material={m.galvanizado} castShadow>
+          <cylinderGeometry args={[0.04, 0.05, 2.8, 8]} />
+        </mesh>
+        <mesh position={[0.3, 2.75, 0]} rotation={[0, 0, Math.PI / 2]} material={m.galvanizado}>
+          <cylinderGeometry args={[0.025, 0.025, 0.6, 6]} />
+        </mesh>
+        <mesh position={[0.55, 2.82, 0]} material={m.blanco}>
+          <cylinderGeometry args={[0.07, 0.07, 0.06, 14]} />
+        </mesh>
+        <mesh position={[0.55, 2.87, 0]}>
+          <sphereGeometry args={[0.045, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2]} />
+          <meshStandardMaterial color="#dff0ff" transparent opacity={0.7} roughness={0.05} />
+        </mesh>
+        <RoundedBox args={[0.3, 0.38, 0.14]} radius={0.03} smoothness={3} position={[0, 1.6, 0.1]} material={m.blanco} />
+      </group>
+    </group>
+  );
+}
+
+/** Tablero de AC en la pared del cuarto de celdas: recibe los inversores. */
+function TableroAC() {
+  const m = useMaterialesEquipos();
+  return (
+    <group>
+      <Tablero m={m} position={[10.14, 1.35, -1.6]} rotation={[0, Math.PI / 2, 0]} ancho={0.9} alto={1} />
+      <mesh position={[10.14, 2.15, -1.6]} material={m.galvanizado}>
+        <cylinderGeometry args={[0.06, 0.06, 0.6, 10]} />
+      </mesh>
+    </group>
   );
 }
 
@@ -459,6 +574,21 @@ function Mundo({ progress, raton, movil }: Props) {
     }
     return out;
   }, []);
+  const rutasSolar = useMemo(() => {
+    const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const dc = MESAS_Z.map((zc) => {
+      const [, y, z] = enMesa(zc, 0, 0.12, -0.06);
+      return [V(PANEL_X0 + (N_COL - 1) * (PAN_A + 0.02), y, z), V(PANEL_X0 - 0.2, y, z), V(PANEL_X0 - 0.75, 0.9, zc + 0.75), V(PANEL_X0 - 1.2, 0.6, zc + 0.78)];
+    });
+    const ac = MESAS_Z.map((zc, i) => [
+      V(PANEL_X0 - 1.2, 0.6, zc + 1.17),
+      V(PANEL_X0 - 1.25, 0.03, zc + 1.6),
+      V(10.9, 0.03, -0.4 + i * 0.2),
+      V(10.35, 0.4, -1.75 + i * 0.15),
+      V(10.18, 0.86, -1.75 + i * 0.15),
+    ]);
+    return { dc, ac };
+  }, []);
   const rutasBT = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
     return [[V(0.9, 3.9, 0), V(1.6, 2.4, 0.9), V(2.4, 0.03, 1.6), V(4.6, 0.03, 1.2), V(5.4, 0.4, 0.2), V(5.4, 0.8, 0)]];
@@ -469,13 +599,13 @@ function Mundo({ progress, raton, movil }: Props) {
     const k = movil ? 1.3 : 1;
     const P = (x: number, y: number, z: number) => new THREE.Vector3(x * k, y, z * k);
     return {
-      pos: new THREE.CatmullRomCurve3([P(-24, 18, 30), P(-12, 12, 22), P(-3, 6.5, 11), P(-24, 10, 12), P(15, 7, 17), P(8.4, 2.8, 6.9), P(-10, 26, 38)]),
+      pos: new THREE.CatmullRomCurve3([P(-24, 18, 30), P(-12, 12, 22), P(-3, 6.5, 11), P(-24, 10, 12), P(21, 6.5, 15), P(8.4, 2.8, 6.9), P(-10, 26, 38)]),
       mira: new THREE.CatmullRomCurve3([
         new THREE.Vector3(2, 2, 0),
         new THREE.Vector3(0, 2.5, 0),
         new THREE.Vector3(-1, 3.4, 0),
         new THREE.Vector3(-34, 8, -2),
-        new THREE.Vector3(7, 2, 1),
+        new THREE.Vector3(13, 1.4, 0),
         new THREE.Vector3(6.2, 2.4, 3.4),
         new THREE.Vector3(4, 0, -2),
       ]),
@@ -508,10 +638,10 @@ function Mundo({ progress, raton, movil }: Props) {
       <Plano progress={progress} lineas={false}>
         <Terreno zonas={zonas} seg={movil ? 140 : 200} />
         <Arboles zonas={zonas} n={movil ? 50 : 110} rmin={40} rmax={160} semilla={11} />
-        <PlantaSolar />
         <Cerca />
       </Plano>
       <Plano progress={progress}>
+        <PlantaSolar energia={bt} />
         <Transformador />
         <Portico />
         <Postes />
@@ -523,6 +653,9 @@ function Mundo({ progress, raton, movil }: Props) {
         <Cables key={i} rutas={[c]} nivel={lineaMT} grosor={0.035} fases={1} />
       ))}
       <Cables rutas={rutasBT} nivel={bt} grosor={0.05} fases={3} enterrado />
+      <Cables rutas={rutasSolar.dc} nivel={bt} grosor={0.022} fases={2} />
+      <Cables rutas={rutasSolar.ac} nivel={bt} grosor={0.03} fases={3} enterrado />
+      <TableroAC />
       <Cota progress={progress} pos={[0, 5.4, 0]} texto="Transformador 630 kVA · 13,2 kV / 440 V" />
       <Cota progress={progress} pos={[-7, 10, 0]} texto="Pórtico de llegada MT" />
       <Cota progress={progress} pos={[-27, 13, 0]} texto="Red de media tensión 13,2 kV" />

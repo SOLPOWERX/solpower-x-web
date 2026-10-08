@@ -7,6 +7,7 @@ import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
+import { Abrazaderas, Bateria, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, tramo, type Momento, type Zona } from "./comun";
 
 /*
@@ -223,50 +224,38 @@ function Casa({ progress }: { progress: MotionValue<number> }) {
   );
 }
 
-/* ---------- Inversor, batería con nivel de carga y cargador del carro ---------- */
+/* ---------- Equipos en la pared del garaje: tablero con medidor, inversor y batería ---------- */
 
-function Equipos({ progress }: { progress: MotionValue<number> }) {
-  const segs = useMemo(
-    () => Array.from({ length: 5 }, () => new THREE.MeshStandardMaterial({ color: "#1a2a1e", emissive: "#3dff8a", emissiveIntensity: 0, toneMapped: false })),
-    [],
-  );
-  const cuerpo = useMemo(() => new THREE.MeshStandardMaterial({ color: "#f6f8fb", metalness: 0.15, roughness: 0.26 }), []);
-  const frente = useMemo(() => new THREE.MeshStandardMaterial({ color: "#1b2230", metalness: 0.4, roughness: 0.25 }), []);
+const XG = W / 2 + 6.4; // cara exterior del garaje
+const Z_TAB = -1.6;
+const Z_INV = 0.1;
+const Z_BAT = 1.65;
+const Y_INV = 1.9;
+/** Carga de la batería: se llena de día y baja un poco cuando respalda la casa de noche. */
+const cargaBateria = (p: number) => 0.18 + 0.82 * tramo(p, 0.42, 0.72) - tramo(p, 0.9, 1) * 0.3;
+
+function Equipos({ progress, energia }: { progress: MotionValue<number>; energia: () => number }) {
+  const m = useMaterialesEquipos();
+  useLedsEquipos(m, energia);
+  const carga = useMemo(() => () => cargaBateria(progress.get()), [progress]);
   const cargador = useMemo(() => new THREE.MeshStandardMaterial({ color: "#3dd2ff", emissive: "#3dd2ff", emissiveIntensity: 0.3, toneMapped: false }), []);
   useFrame(({ clock }) => {
     const p = progress.get();
-    // Se carga de día y baja un poco cuando respalda la casa de noche
-    const carga = tramo(p, 0.42, 0.72) - tramo(p, 0.9, 1) * 0.35;
-    segs.forEach((s, i) => {
-      const lleno = c01(carga * 5 - i);
-      s.emissiveIntensity = lleno * (1.6 + (lleno < 1 ? Math.sin(clock.elapsedTime * 5) * 0.8 : 0));
-    });
     cargador.emissiveIntensity = 0.3 + tramo(p, 0.6, 0.66) * (1 - tramo(p, 0.84, 0.9)) * (2 + Math.sin(clock.elapsedTime * 3));
   });
-  const x = W / 2 + 6.45; // pared exterior del garaje
   return (
     <group>
-      {/* Inversor */}
-      <group position={[x, 2.4, -0.6]} rotation={[0, Math.PI / 2, 0]}>
-        <RoundedBox args={[0.7, 0.85, 0.22]} radius={0.05} smoothness={3} material={cuerpo} castShadow />
-        <mesh position={[0, 0.22, 0.115]} material={frente}>
-          <boxGeometry args={[0.38, 0.14, 0.01]} />
-        </mesh>
-      </group>
-      {/* Batería con cinco barras de carga */}
-      <group position={[x, 1.05, 1.1]} rotation={[0, Math.PI / 2, 0]}>
-        <RoundedBox args={[0.85, 1.9, 0.26]} radius={0.06} smoothness={3} material={cuerpo} castShadow />
-        {segs.map((m, i) => (
-          <mesh key={i} position={[0, -0.5 + i * 0.22, 0.135]} material={m}>
-            <boxGeometry args={[0.36, 0.1, 0.01]} />
-          </mesh>
-        ))}
-      </group>
+      <Tablero m={m} position={[XG + 0.13, 1.3, Z_TAB]} rotation={[0, Math.PI / 2, 0]} ancho={0.7} alto={0.9} medidor />
+      <Inversor m={m} position={[XG + 0.17, Y_INV, Z_INV]} rotation={[0, Math.PI / 2, 0]} />
+      <Bateria m={m} position={[XG + 0.16, 0, Z_BAT]} rotation={[0, Math.PI / 2, 0]} carga={carga} />
       {/* Cargador del carro eléctrico en el frente del garaje */}
       <group position={[W / 2 + 0.9, 1.3, 4.6]}>
-        <RoundedBox args={[0.45, 0.6, 0.16]} radius={0.04} smoothness={3} material={cuerpo} castShadow />
+        <RoundedBox args={[0.45, 0.6, 0.16]} radius={0.04} smoothness={3} material={m.blanco} castShadow />
         <mesh position={[0, 0.08, 0.085]} material={cargador}>
           <boxGeometry args={[0.22, 0.04, 0.01]} />
+        </mesh>
+        <mesh position={[0.12, -0.2, 0.09]} material={m.negro}>
+          <cylinderGeometry args={[0.04, 0.04, 0.06, 10]} />
         </mesh>
       </group>
       {/* Carro eléctrico */}
@@ -288,6 +277,108 @@ function Equipos({ progress }: { progress: MotionValue<number> }) {
             <meshStandardMaterial color="#15181d" roughness={0.6} />
           </mesh>
         ))}
+        {[-0.7, 0.7].map((x) => (
+          <mesh key={x} position={[x, 0.85, 2.16]}>
+            <boxGeometry args={[0.4, 0.12, 0.02]} />
+            <meshStandardMaterial color="#fff6dc" emissive="#fff0c8" emissiveIntensity={0.6} toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+/** Detalles de la casa: marcos de ventana, canales, cumbrera, rieles del techo solar, lámparas y jardín. */
+function CasaDetalles({ progress }: { progress: MotionValue<number> }) {
+  const marco = <meshStandardMaterial color="#2b2f36" metalness={0.5} roughness={0.4} />;
+  const lamparas = useMemo(() => new THREE.MeshStandardMaterial({ color: "#fff3d6", emissive: "#ffd88a", emissiveIntensity: 0.2, toneMapped: false }), []);
+  useFrame(() => {
+    lamparas.emissiveIntensity = 0.2 + noche(progress.get()) * 3;
+  });
+  const zf = D / 2 + 0.09;
+  return (
+    <group>
+      {/* Marcos y divisiones de los ventanales */}
+      {[
+        [2.4, 1.6, 6, 2.4],
+        [2.4, 4.7, 6, 1.7],
+      ].map(([x, y, w, h], i) => (
+        <group key={i}>
+          {[-1, 1].map((s) => (
+            <mesh key={s} position={[x, y + (s * h) / 2, zf]}>
+              <boxGeometry args={[w + 0.1, 0.08, 0.06]} />
+              {marco}
+            </mesh>
+          ))}
+          {[-0.5, -1 / 6, 1 / 6, 0.5].map((f) => (
+            <mesh key={f} position={[x + f * w, y, zf]}>
+              <boxGeometry args={[0.07, h, 0.06]} />
+              {marco}
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Canales de agua lluvia en los aleros */}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[0, H + 0.02, s * (D / 2 + 0.42)]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.09, 0.09, W + 0.8, 10, 1, false, 0, Math.PI]} />
+          <meshStandardMaterial color="#c9ced6" metalness={0.6} roughness={0.35} side={THREE.DoubleSide} />
+        </mesh>
+      ))}
+      <mesh position={[-W / 2 - 0.2, H / 2, D / 2 + 0.42]}>
+        <cylinderGeometry args={[0.05, 0.05, H, 8]} />
+        <meshStandardMaterial color="#c9ced6" metalness={0.6} />
+      </mesh>
+      {/* Cumbrera */}
+      <mesh position={[0, H + SUBE + 0.14, 0]}>
+        <boxGeometry args={[W + 0.9, 0.12, 0.35]} />
+        {marco}
+      </mesh>
+      {/* Rieles de aluminio bajo los paneles */}
+      {[0.55, 1.75, 2.25, 3.45].map((z) => (
+        <mesh key={z} position={[0, techoY(z) + 0.17, z]} rotation={[PEND, 0, 0]}>
+          <boxGeometry args={[8.8, 0.05, 0.05]} />
+          <meshStandardMaterial color="#c7ced8" metalness={0.8} roughness={0.3} />
+        </mesh>
+      ))}
+      {/* Lámparas a los lados de la puerta */}
+      {[-1.85, -0.15].map((x) => (
+        <mesh key={x} position={[x, 2.2, D / 2 + 0.12]} material={lamparas}>
+          <boxGeometry args={[0.14, 0.32, 0.1]} />
+        </mesh>
+      ))}
+      {/* Jardín: camino de piedras, materas y buzón */}
+      {Array.from({ length: 7 }).map((_, i) => (
+        <mesh key={i} position={[-1 + (i % 2 ? 0.25 : -0.25), 0.05, 5.4 + i * 1.25]} receiveShadow>
+          <cylinderGeometry args={[0.45, 0.48, 0.08, 7]} />
+          <meshStandardMaterial color="#cfc8b8" roughness={0.9} />
+        </mesh>
+      ))}
+      {[
+        [-5.5, 5.4],
+        [-8, 5.4],
+        [4.8, 5.3],
+      ].map(([x, z], i) => (
+        <group key={i} position={[x, 0, z]}>
+          <mesh position={[0, 0.3, 0]} castShadow>
+            <cylinderGeometry args={[0.32, 0.25, 0.6, 12]} />
+            <meshStandardMaterial color="#b0603a" roughness={0.8} />
+          </mesh>
+          <mesh position={[0, 0.85, 0]} castShadow>
+            <icosahedronGeometry args={[0.5, 1]} />
+            <meshStandardMaterial color={i % 2 ? "#5f9a3a" : "#3f7a2c"} roughness={0.9} flatShading />
+          </mesh>
+        </group>
+      ))}
+      <group position={[1.2, 0, 14.1]}>
+        <mesh position={[0, 0.6, 0]}>
+          <boxGeometry args={[0.08, 1.2, 0.08]} />
+          {marco}
+        </mesh>
+        <mesh position={[0, 1.3, 0]} castShadow>
+          <boxGeometry args={[0.35, 0.3, 0.5]} />
+          {marco}
+        </mesh>
       </group>
     </group>
   );
@@ -385,20 +476,39 @@ function Mundo({ progress, raton, movil }: Props) {
   const carro = useMemo(() => () => tramo(progress.get(), 0.6, 0.66) * (1 - tramo(progress.get(), 0.84, 0.9)), [progress]);
   const deRed = useMemo(() => () => 0.3 + 0.4 * red(progress.get(), reloj.current), [progress]);
   const hora = useMemo(() => () => progress.get(), [progress]);
+  const matsClips = useMaterialesEquipos();
 
   const rutas = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const xg = W / 2 + 6.5;
+    const xc = XG + 0.12; // cables pegados a la pared del garaje
+    // DC: del techo baja por la pared de la casa, cruza el techo del garaje y entra por abajo al inversor
+    const dc = [
+      V(3.4, techoY(3.6) + 0.34, 3.6),
+      V(5.8, techoY(3.9) + 0.32, 3.9),
+      V(W / 2 + 0.12, H - 0.1, 4.0),
+      V(W / 2 + 0.12, 3.85, 4.0),
+      V(W / 2 + 0.6, 3.66, 3.9),
+      V(XG - 0.3, 3.66, 3.9),
+      V(xc, 3.45, 3.6),
+      V(xc, 3.0, Z_INV + 0.9),
+      V(xc, 2.6, Z_INV + 0.6),
+      V(xc, 1.3, Z_INV + 0.6),
+      V(xc + 0.1, 1.3, Z_INV + 0.2),
+      V(XG + 0.2, 1.42, Z_INV + 0.15),
+    ];
+    // Inversor ↔ batería
+    const bat = [V(XG + 0.2, 1.42, Z_INV + 0.08), V(xc + 0.04, 1.15, Z_INV + 0.45), V(xc + 0.04, 1.15, Z_BAT - 0.55), V(XG + 0.16, 1.48, Z_BAT - 0.42)];
+    // Inversor → tablero (AC)
+    const ac = [V(XG + 0.2, 1.42, Z_INV - 0.06), V(xc + 0.04, 1.1, Z_INV - 0.3), V(xc + 0.04, 0.7, Z_TAB + 0.6), V(XG + 0.14, 0.82, Z_TAB + 0.15)];
     return {
-      // Del techo por el alero, al garaje, al inversor y a la batería
-      solar: [
-        [V(4.6, techoY(2) + 0.42, 2), V(W / 2 + 0.3, H + 0.3, 2.6), V(W / 2 + 0.4, 3.8, 2.6), V(xg - 3, 3.75, -0.6), V(xg + 0.05, 3.7, -0.6), V(xg + 0.05, 2.9, -0.6)],
-        [V(xg + 0.05, 1.95, -0.6), V(xg + 0.08, 1.9, 0.3), V(xg + 0.08, 2.05, 1.1)],
-      ],
+      dc: [dc],
+      bat: [bat],
+      ac: [ac],
+      abrazaderas: [dc.slice(2, 4), dc.slice(6, 10), [bat[1], bat[2]], [ac[1], ac[2]]],
       // Cargador → carro
-      carro: [[V(W / 2 + 0.9, 1.0, 4.7), V(W / 2 + 1.4, 0.15, 5.4), V(W / 2 + 2.2, 0.15, 6.4), V(W / 2 + 2.2, 0.9, 6.7)]],
-      // Acometida de la red desde el poste de la calle
-      red: [[V(W / 2 + 6, 0.03, 16), V(W / 2 + 6.6, 0.03, 8), V(xg + 0.3, 0.03, 3), V(xg + 0.08, 0.6, 0.2)]],
+      carro: [[V(W / 2 + 1.02, 1.08, 4.69), V(W / 2 + 1.4, 0.15, 5.4), V(W / 2 + 2.2, 0.15, 6.4), V(W / 2 + 2.2, 0.9, 6.7)]],
+      // Acometida de la red desde el poste de la calle hasta el medidor
+      red: [[V(W / 2 + 6, 0.03, 16), V(W / 2 + 6.6, 0.03, 8), V(XG + 0.5, 0.03, 0), V(XG + 0.18, 0.5, Z_TAB - 0.15), V(XG + 0.14, 0.82, Z_TAB - 0.15)]],
     };
   }, []);
 
@@ -463,9 +573,15 @@ function Mundo({ progress, raton, movil }: Props) {
       ))}
       <Casa progress={progress} />
       <TechoSolar progress={progress} />
-      <Equipos progress={progress} />
+      <CasaDetalles progress={progress} />
+      <Equipos progress={progress} energia={energia} />
+      {rutas.abrazaderas.map((r, i) => (
+        <Abrazaderas key={i} m={matsClips} puntos={r} cada={0.45} tam={0.07} />
+      ))}
       <Barrio progress={progress} />
-      <Cables rutas={rutas.solar} nivel={energia} grosor={0.035} fases={3} />
+      <Cables rutas={rutas.dc} nivel={energia} grosor={0.024} fases={2} />
+      <Cables rutas={rutas.bat} nivel={energia} grosor={0.024} fases={2} />
+      <Cables rutas={rutas.ac} nivel={energia} grosor={0.024} fases={3} />
       <Cables rutas={rutas.carro} nivel={carro} grosor={0.05} fases={1} />
       <Cables rutas={rutas.red} nivel={deRed} grosor={0.045} fases={3} enterrado />
     </>

@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { site } from "@/lib/site";
-import { norms, clients } from "@/lib/content";
+import { norms } from "@/lib/content";
 import { ingenieriaSolar, serviciosElectricos, waIngenieria, waInstaladores } from "@/lib/ingenieria";
 import HeaderNuevo from "./HeaderNuevo";
 import HeroPagina from "./HeroPagina";
@@ -15,7 +15,7 @@ const EscenaIngenieria = dynamic(() => import("./escena/EscenaIngenieria"), { ss
 const etapas: Etapa[] = [
   {
     a: 0.15, b: 0.36, n: "01", kicker: "Diseño", title: "Todo empieza en el plano",
-    body: "Planos, memorias de cálculo RETIE y simulación PVsyst antes de construir.",
+    body: "Planos, memorias de cálculo RETIE y simulación de producción antes de construir.",
     pos: `inset-x-5 bottom-12 md:inset-x-auto md:bottom-[12%] md:w-[23rem] ${GI}`,
   },
   {
@@ -24,13 +24,18 @@ const etapas: Etapa[] = [
     pos: `inset-x-5 top-24 md:inset-x-auto md:top-[15%] md:w-[22rem] ${GI}`,
   },
   {
-    a: 0.61, b: 0.78, n: "03", kicker: "Redes", title: "Media y baja tensión",
+    a: 0.58, b: 0.69, n: "03", kicker: "Redes", title: "Media y baja tensión",
     body: "Diseño y construcción del poste al tablero, con el trámite ante el operador de red.",
     pos: `inset-x-5 bottom-12 md:inset-x-auto md:bottom-auto md:top-1/2 md:w-[22rem] md:-translate-y-1/2 ${GD}`,
     caja: true,
   },
   {
-    a: 0.82, b: 1.1, n: "04", kicker: "Calidad de energía y RETIE", title: "Energía limpia y certificada",
+    a: 0.71, b: 0.8, n: "04", kicker: "Ingeniería solar", title: "Planta completa, no solo paneles",
+    body: "Estructura, inversores, protecciones, tablero y cableado diseñados y firmados.",
+    pos: `inset-x-5 bottom-12 md:inset-x-auto md:bottom-[12%] md:w-[23rem] ${GI}`,
+  },
+  {
+    a: 0.82, b: 1.1, n: "05", kicker: "Calidad de energía y RETIE", title: "Energía limpia y certificada",
     body: "Medimos armónicos y factor de potencia, corregimos y certificamos la instalación.",
     pos: `inset-x-5 top-24 md:inset-x-auto md:top-[15%] md:w-[21rem] ${GI}`,
     caja: true,
@@ -156,8 +161,7 @@ export default function IngenieriaPagina() {
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sol-claro">¿Es instalador?</p>
                 <h3 className="mt-3 text-3xl font-bold md:text-4xl">Usted instala, nosotros firmamos</h3>
                 <p className="mt-3 max-w-xl text-white/70">
-                  Simulación, planos, memorias RETIE y legalización para sus proyectos. Trabajamos con empresas como{" "}
-                  {clients.map((c) => c.name).join(" y ")}.
+                  Simulación, planos, memorias RETIE y legalización para sus proyectos, firmados por ingeniero electricista.
                 </p>
               </div>
               <a href={waInstaladores} target="_blank" rel="noopener noreferrer" className="btn-sol shine relative mt-6 shrink-0 md:mt-0">
