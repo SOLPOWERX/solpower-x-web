@@ -114,6 +114,55 @@ export function texturaRejilla() {
   );
 }
 
+/** Malla eslabonada para cerramientos (con transparencia). */
+export function texturaMalla() {
+  return lienzo(
+    64,
+    64,
+    (g) => {
+      g.clearRect(0, 0, 64, 64);
+      g.strokeStyle = "rgba(200,208,218,.95)";
+      g.lineWidth = 3;
+      g.beginPath();
+      g.moveTo(0, 32);
+      g.lineTo(32, 0);
+      g.lineTo(64, 32);
+      g.lineTo(32, 64);
+      g.closePath();
+      g.stroke();
+    },
+    true,
+  );
+}
+
+/** Señal amarilla de "peligro, riesgo eléctrico". */
+export function texturaSenal() {
+  return lienzo(128, 128, (g) => {
+    g.fillStyle = "#ffffff";
+    g.fillRect(0, 0, 128, 128);
+    g.fillStyle = "#ffc400";
+    g.strokeStyle = "#111";
+    g.lineWidth = 6;
+    g.beginPath();
+    g.moveTo(64, 10);
+    g.lineTo(120, 112);
+    g.lineTo(8, 112);
+    g.closePath();
+    g.fill();
+    g.stroke();
+    g.fillStyle = "#111";
+    g.beginPath();
+    g.moveTo(70, 38);
+    g.lineTo(50, 74);
+    g.lineTo(64, 74);
+    g.lineTo(56, 100);
+    g.lineTo(80, 62);
+    g.lineTo(66, 62);
+    g.closePath();
+    g.fill();
+  });
+}
+
 /** Ruido fino para dar textura al pasto y la tierra. */
 export function texturaRuido() {
   return lienzo(

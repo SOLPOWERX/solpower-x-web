@@ -7,7 +7,7 @@ import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
-import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, texturaLamina, texturaRejilla, tramo, type Camino, type Zona } from "./comun";
+import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, texturaLamina, texturaMalla, texturaRejilla, texturaSenal, tramo, type Camino, type Zona } from "./comun";
 
 /*
  * Portada: una sola escena 3D que cambia con el scroll.
@@ -33,7 +33,7 @@ const giroSol = (p: number) => lerp(0.6, -0.45, tramo(p, 0, 1));
 
 const zonas: Zona[] = [
   { x0: -29, x1: 29, z0: -20, z1: 13, color: "#8f8b7b" }, // planta (grava)
-  { x0: 31, x1: 38, z0: -5, z1: 3, color: "#a7a69d" }, // estación inversora
+  { x0: 29.5, x1: 40.5, z0: -6.6, z1: 4.8, color: "#a7a69d" }, // subestación
   { x0: 36, x1: 74, z0: -28, z1: 1, color: "#a3a29a" }, // patio de la fábrica
 ];
 const caminos: Camino[] = [
@@ -291,11 +291,181 @@ function Skid({ energia }: { energia: () => number }) {
         </mesh>
       ))}
       {[-0.6, 0, 0.6].map((z) => (
-        <mesh key={z} position={[1.9, 2.85, z]} castShadow>
-          <cylinderGeometry args={[0.09, 0.12, 0.6, 10]} />
-          <meshStandardMaterial color="#7a4a2c" roughness={0.3} />
+        <group key={z}>
+          <mesh position={[1.9, 2.85, z]} castShadow>
+            <cylinderGeometry args={[0.09, 0.12, 0.6, 10]} />
+            <meshStandardMaterial color="#7a4a2c" roughness={0.3} />
+          </mesh>
+          {/* Faldones del aislador */}
+          {[2.72, 2.86, 3.0].map((y) => (
+            <mesh key={y} position={[1.9, y, z]}>
+              <cylinderGeometry args={[0.15, 0.15, 0.03, 12]} />
+              <meshStandardMaterial color="#8a5534" roughness={0.3} />
+            </mesh>
+          ))}
+          {/* Cable del aislador al gabinete */}
+          <mesh position={[0.95, 3.1, z]} rotation={[0, 0, Math.PI / 2.4]}>
+            <cylinderGeometry args={[0.035, 0.035, 2, 8]} />
+            <meshStandardMaterial color="#1b1f26" roughness={0.6} />
+          </mesh>
+        </group>
+      ))}
+      {/* Tanque conservador sobre el transformador */}
+      <mesh position={[1.9, 3.35, -0.95]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.28, 0.28, 2, 16]} />
+        <meshStandardMaterial color="#dfe4ea" metalness={0.4} roughness={0.35} />
+      </mesh>
+      {[1.2, 2.6].map((x) => (
+        <mesh key={x} position={[x, 2.85, -0.95]}>
+          <boxGeometry args={[0.08, 0.7, 0.08]} />
+          <meshStandardMaterial color="#9aa3ae" metalness={0.6} />
         </mesh>
       ))}
+      {/* Radiadores del otro lado */}
+      {[0.9, 1.3, 1.7, 2.1, 2.5, 2.9].map((x) => (
+        <mesh key={x} position={[x, 1.4, -1.22]} castShadow>
+          <boxGeometry args={[0.05, 1.7, 0.16]} />
+          <meshStandardMaterial color="#d4dae2" metalness={0.4} roughness={0.4} />
+        </mesh>
+      ))}
+      {/* Puertas, manijas y placa del gabinete */}
+      {[-2.6, -0.8].map((x) => (
+        <group key={x}>
+          <mesh position={[x, 1.66, 1.36]}>
+            <boxGeometry args={[0.02, 2.3, 0.01]} />
+            <meshStandardMaterial color="#9ea7b3" />
+          </mesh>
+          <mesh position={[x + 0.25, 1.6, 1.38]}>
+            <boxGeometry args={[0.06, 0.32, 0.05]} />
+            <meshStandardMaterial color="#3b424c" metalness={0.7} />
+          </mesh>
+        </group>
+      ))}
+      {/* Bandeja portacables entre gabinete y transformador */}
+      <mesh position={[0.1, 3.05, 0.9]} castShadow>
+        <boxGeometry args={[1.5, 0.08, 0.4]} />
+        <meshStandardMaterial color="#aab3be" metalness={0.7} roughness={0.35} />
+      </mesh>
+      {/* Celda de media tensión (RMU) */}
+      <group position={[0.4, 0, -2.9]}>
+        <mesh position={[0, 0.08, 0]} receiveShadow>
+          <boxGeometry args={[2.2, 0.16, 1.5]} />
+          <meshStandardMaterial color="#b9b8b0" roughness={0.9} />
+        </mesh>
+        <mesh position={[0, 1.16, 0]} castShadow receiveShadow>
+          <boxGeometry args={[1.9, 2, 1.1]} />
+          <meshStandardMaterial color="#b7c0cb" metalness={0.35} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 1.55, 0.56]}>
+          <boxGeometry args={[1.3, 0.35, 0.02]} />
+          <meshStandardMaterial color="#1c2b40" metalness={0.5} roughness={0.2} />
+        </mesh>
+        {[-0.45, 0, 0.45].map((x, i) => (
+          <mesh key={x} position={[x, 1.1, 0.57]}>
+            <circleGeometry args={[0.07, 16]} />
+            <meshStandardMaterial color={i === 1 ? "#e53935" : "#43a047"} emissive={i === 1 ? "#e53935" : "#43a047"} emissiveIntensity={1.2} toneMapped={false} />
+          </mesh>
+        ))}
+      </group>
+      {/* Extintor */}
+      <mesh position={[-3.7, 0.45, 1.75]} castShadow>
+        <cylinderGeometry args={[0.13, 0.13, 0.7, 12]} />
+        <meshStandardMaterial color="#d32f2f" metalness={0.3} roughness={0.35} />
+      </mesh>
+      <Cerramiento energia={energia} />
+    </group>
+  );
+}
+
+/** Cerramiento de la subestación: malla, postes, puerta, señal de peligro y luminaria. */
+function Cerramiento({ energia }: { energia: () => number }) {
+  const malla = useMemo(() => texturaMalla(), []);
+  const senal = useMemo(() => texturaSenal(), []);
+  const mallaPuerta = useMemo(() => {
+    const t = texturaMalla();
+    t.repeat.set(1.36 * 3, 2.1 * 3);
+    return t;
+  }, []);
+  const lampara = useRef<THREE.MeshStandardMaterial>(null);
+  const X0 = -4.6;
+  const X1 = 5.6;
+  const Z0 = -5.2;
+  const Z1 = 5.4;
+  const H = 2.2;
+  // Tramos de cerca [x0, z0, x1, z1]; el frente se parte para dejar la puerta
+  const tramos: [number, number, number, number][] = [
+    [X0, Z0, X1, Z0],
+    [X1, Z0, X1, Z1],
+    [X0, Z0, X0, Z1],
+    [X0, Z1, -1.4, Z1],
+    [1.4, Z1, X1, Z1],
+  ];
+  const postes = useMemo(() => {
+    const out: [number, number][] = [];
+    for (const [a, b, c, d] of tramos) {
+      const n = Math.max(1, Math.round(Math.hypot(c - a, d - b) / 2.2));
+      for (let i = 0; i <= n; i++) out.push([a + ((c - a) * i) / n, b + ((d - b) * i) / n]);
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useFrame(() => {
+    lampara.current!.emissiveIntensity = 0.6 + energia() * 3;
+  });
+
+  return (
+    <group>
+      {tramos.map(([a, b, c, d], i) => {
+        const largo = Math.hypot(c - a, d - b);
+        const t = malla.clone();
+        t.needsUpdate = true;
+        t.repeat.set(largo * 3, H * 3);
+        return (
+          <group key={i} position={[(a + c) / 2, 0, (b + d) / 2]} rotation={[0, -Math.atan2(d - b, c - a), 0]}>
+            <mesh position={[0, H / 2, 0]}>
+              <planeGeometry args={[largo, H]} />
+              <meshStandardMaterial map={t} transparent alphaTest={0.3} side={THREE.DoubleSide} metalness={0.6} roughness={0.4} />
+            </mesh>
+            <mesh position={[0, H, 0]} rotation={[0, 0, Math.PI / 2]}>
+              <cylinderGeometry args={[0.03, 0.03, largo, 6]} />
+              <meshStandardMaterial color="#aeb6c1" metalness={0.7} />
+            </mesh>
+          </group>
+        );
+      })}
+      {postes.map(([x, z], i) => (
+        <mesh key={i} position={[x, H / 2 + 0.1, z]} castShadow>
+          <cylinderGeometry args={[0.045, 0.05, H + 0.2, 6]} />
+          <meshStandardMaterial color="#9aa3ae" metalness={0.7} roughness={0.4} />
+        </mesh>
+      ))}
+      {/* Puerta de dos hojas */}
+      {[-0.7, 0.7].map((x) => (
+        <mesh key={x} position={[x, H / 2, Z1]}>
+          <boxGeometry args={[1.36, H - 0.1, 0.04]} />
+          <meshStandardMaterial map={mallaPuerta} transparent alphaTest={0.3} color="#dfe5ec" metalness={0.6} />
+        </mesh>
+      ))}
+      {/* Señal de peligro */}
+      <mesh position={[2.6, 1.35, Z1 + 0.03]}>
+        <planeGeometry args={[0.6, 0.6]} />
+        <meshStandardMaterial map={senal} roughness={0.6} />
+      </mesh>
+      {/* Poste de iluminación */}
+      <group position={[X1 - 0.4, 0, Z1 - 0.4]}>
+        <mesh position={[0, 2.6, 0]} castShadow>
+          <cylinderGeometry args={[0.06, 0.09, 5.2, 8]} />
+          <meshStandardMaterial color="#8d96a3" metalness={0.7} />
+        </mesh>
+        <mesh position={[-0.45, 5.15, 0]} rotation={[0, 0, Math.PI / 2]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.9, 6]} />
+          <meshStandardMaterial color="#8d96a3" metalness={0.7} />
+        </mesh>
+        <mesh position={[-0.85, 5.08, 0]}>
+          <boxGeometry args={[0.45, 0.1, 0.22]} />
+          <meshStandardMaterial ref={lampara} color="#fff3d6" emissive="#ffd88a" emissiveIntensity={0.6} toneMapped={false} />
+        </mesh>
+      </group>
     </group>
   );
 }
@@ -507,8 +677,8 @@ function Mundo({ progress, raton, listo, movil }: Props) {
     const P = (x: number, y: number, z: number) => new THREE.Vector3(b.x + x, y, b.z + z);
     const k = movil ? 1.35 : 1;
     return {
-      pos: new THREE.CatmullRomCurve3([P(6 * k, 13, 27 * k), P(1, 5.5, 13), P(-3.6, 4.6, 8.6), P(-2.2, 4.4, 8.2), P(9, 8, 15), P(18 * k, 34, 52 * k)]),
-      mira: new THREE.CatmullRomCurve3([P(-6, 1.5, -18), P(-2, 1.8, -6), P(0.4, 3.0, 1.6), P(0.5, 3.0, 1.6), P(6, 1.5, -6), P(36, 0, -16)]),
+      pos: new THREE.CatmullRomCurve3([P(6 * k, 13, 27 * k), P(1, 5.5, 13), P(-3.6, 4.6, 8.6), P(-2.2, 4.4, 8.2), P(9, 8, 15), P(24, 6.5, 6.5), P(18 * k, 34, 52 * k)]),
+      mira: new THREE.CatmullRomCurve3([P(-6, 1.5, -18), P(-2, 1.8, -6), P(0.4, 3.0, 1.6), P(0.5, 3.0, 1.6), P(6, 1.5, -6), P(35, 1.6, -6), P(36, 0, -16)]),
     };
   }, [base, movil]);
 
@@ -516,7 +686,11 @@ function Mundo({ progress, raton, listo, movil }: Props) {
     const p = progress.get();
     if (listo) entrada.current = Math.min(1, entrada.current + dt / 2.6);
     const e = 1 - Math.pow(1 - entrada.current, 3);
-    const u = c01(p);
+    // Momento del scroll en que la cámara llega a cada punto (el penúltimo pasa junto a la subestación)
+    const tiempos = [0, 0.2, 0.4, 0.6, 0.78, 0.9, 1];
+    let i = 0;
+    while (i < tiempos.length - 2 && p > tiempos[i + 1]) i++;
+    const u = (i + c01((p - tiempos[i]) / (tiempos[i + 1] - tiempos[i]))) / (tiempos.length - 1);
     rutasCamara.pos.getPoint(u, tmp.p);
     rutasCamara.mira.getPoint(u, tmp.t);
     tmp.v.set(tmp.p.x - 18, tmp.p.y + 22, tmp.p.z + 26);

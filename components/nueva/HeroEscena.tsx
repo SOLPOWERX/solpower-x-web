@@ -11,25 +11,51 @@ const c01 = (v: number) => Math.min(1, Math.max(0, v));
 /** Visible entre a y b, con entrada y salida suaves. */
 const ventana = (v: number, a: number, b: number, f = 0.04) => Math.min(c01((v - a) / f), c01((b - v) / f));
 
+const G = "md:left-[max(1.25rem,calc((100vw-80rem)/2+1.25rem))]";
+
+/**
+ * Cada paso aparece en un lugar distinto para no tapar la animación,
+ * y se desliza mientras se baja para moverse junto con la escena.
+ */
 const etapas = [
-  { a: 0.17, b: 0.33, n: "01", kicker: "Estudio", title: "Todo empieza con su factura", body: "Medimos su consumo y su espacio antes de diseñar." },
-  { a: 0.4, b: 0.62, n: "02", kicker: "Diseño", title: "Cada capa, calculada", body: "Simulación PVsyst y componentes de marcas reconocidas." },
-  { a: 0.66, b: 0.8, n: "03", kicker: "Instalación", title: "Montaje sin detener su operación", body: "Personal certificado y estructura para más de 25 años." },
-  { a: 0.84, b: 1.1, n: "04", kicker: "Certificación y conexión", title: "Del sol a su empresa", body: "Certificación RETIE y legalización ante el operador de red." },
+  {
+    a: 0.17, b: 0.33, n: "01", kicker: "Estudio", title: "Todo empieza con su factura", body: "Medimos su consumo y su espacio antes de diseñar.",
+    pos: `inset-x-5 bottom-12 md:inset-x-auto md:bottom-[13%] md:w-[23rem] ${G}`, caja: false, chico: false,
+  },
+  {
+    a: 0.4, b: 0.62, n: "02", kicker: "Diseño", title: "Cada capa, calculada", body: "Simulación PVsyst y componentes de marcas reconocidas.",
+    pos: `inset-x-5 top-24 md:inset-x-auto md:top-[16%] md:w-[19rem] ${G}`, caja: false, chico: false,
+  },
+  {
+    a: 0.66, b: 0.8, n: "03", kicker: "Instalación", title: "Montaje sin detener su operación", body: "Personal certificado y estructura para más de 25 años.",
+    pos: `inset-x-5 bottom-10 md:inset-x-auto md:bottom-auto md:top-1/2 md:w-[26rem] md:-translate-y-1/2 ${G}`, caja: true, chico: false,
+  },
+  {
+    a: 0.84, b: 1.1, n: "04", kicker: "Certificación y conexión", title: "Del sol a su empresa", body: "Certificación RETIE y legalización ante el operador de red.",
+    pos: `inset-x-5 top-24 md:inset-x-auto md:top-[15%] md:w-[19rem] ${G}`, caja: true, chico: true,
+  },
 ];
 
 function Etapa({ e, p }: { e: (typeof etapas)[number]; p: MotionValue<number> }) {
   const o = useTransform(p, (v) => ventana(v, e.a, e.b));
-  const y = useTransform(p, (v) => (1 - ventana(v, e.a, e.b)) * 30);
+  // Sube despacio mientras está visible, como si estuviera en la escena
+  const y = useTransform(p, (v) => 60 - c01((v - e.a) / (Math.min(e.b, 1) - e.a)) * 90);
+  const chico = !e.caja || e.chico;
   return (
-    <motion.div className="absolute inset-x-5 bottom-10 md:inset-x-auto md:bottom-auto md:left-[max(1.25rem,calc((100vw-80rem)/2+1.25rem))] md:top-1/2 md:w-[26rem] md:-translate-y-1/2" style={{ opacity: o, y }}>
-      <div className="rounded-[24px] bg-azul-950/55 p-6 ring-1 ring-inset ring-white/10 backdrop-blur-md md:p-7">
-        <p className="flex items-baseline gap-3 text-sm font-semibold uppercase tracking-[0.18em] text-sol-claro">
-          <span className="text-3xl font-extrabold tracking-normal text-white/90">{e.n}</span>
+    <motion.div className={`pointer-events-none absolute ${e.pos}`} style={{ opacity: o, y }}>
+      <div
+        className={
+          e.caja
+            ? `rounded-[22px] bg-azul-950/45 ring-1 ring-inset ring-white/10 backdrop-blur-md ${e.chico ? "p-5" : "p-6 md:p-7"}`
+            : "border-l-2 border-sol-claro/80 pl-5 [text-shadow:0_2px_18px_rgba(4,15,38,.75)]"
+        }
+      >
+        <p className="flex items-baseline gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-sol-claro md:text-sm">
+          <span className={`font-extrabold tracking-normal text-white/90 ${chico ? "text-2xl" : "text-3xl"}`}>{e.n}</span>
           {e.kicker}
         </p>
-        <h2 className="mt-3 text-2xl font-bold leading-tight text-white md:text-4xl">{e.title}</h2>
-        <p className="mt-3 text-white/70">{e.body}</p>
+        <h2 className={`mt-2 font-bold leading-tight text-white ${chico ? "text-2xl md:text-[1.7rem]" : "text-2xl md:text-4xl"}`}>{e.title}</h2>
+        <p className={`mt-2 text-white/75 ${chico ? "text-sm" : ""}`}>{e.body}</p>
       </div>
     </motion.div>
   );
