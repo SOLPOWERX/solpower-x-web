@@ -350,35 +350,132 @@ export function Arboles({ zonas, n = 160, rmin = 40, rmax = 150, semilla = 1 }: 
 
 const cableVert = /* glsl */ `
 varying vec2 vUv;
-void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
-const cableFrag = /* glsl */ `
-uniform float t; uniform float k; uniform float largo;
-varying vec2 vUv;
+varying vec3 vN;
+varying vec3 vVista;
 void main() {
+  vUv = uv;
+  vN = normalize(normalMatrix * normal);
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vVista = -mv.xyz;
+  gl_Position = projectionMatrix * mv;
+}`;
+const cableFrag = /* glsl */ `
+uniform float t; uniform float k; uniform float largo; uniform float fase;
+varying vec2 vUv;
+varying vec3 vN;
+varying vec3 vVista;
+void main() {
+  // Cable de caucho con luz, brillo y borde: se ve redondo, no plano
+  vec3 n = normalize(vN);
+  vec3 V = normalize(vVista);
+  vec3 L = normalize(vec3(0.35, 0.85, 0.4));
+  float dif = max(dot(n, L), 0.0);
+  float spec = pow(max(dot(n, normalize(L + V)), 0.0), 48.0);
+  float borde = pow(1.0 - max(dot(n, V), 0.0), 2.2);
+  vec3 caucho = vec3(0.075, 0.08, 0.095);
+  vec3 col = caucho * (0.3 + 1.1 * dif) + vec3(0.75) * spec * 0.55;
+
+  // Olas de luz que corren por el cable; cada fase con su tono (dorado, cian, blanco cálido)
   float x = vUv.x * largo;
-  float w = fract(x * 0.12 - t * 0.9);
+  float w = fract(x * 0.12 - t * 0.9 - fase * 0.33);
   float ola = smoothstep(0.0, 0.08, w) * (1.0 - smoothstep(0.08, 0.45, w));
-  vec3 oro = vec3(1.0, 0.72, 0.18);
-  vec3 cian = vec3(0.25, 0.85, 1.0);
-  vec3 blanco = vec3(1.0, 0.97, 0.88);
-  float m = 0.5 + 0.5 * sin(x * 0.08 - t * 1.3);
-  vec3 col = mix(oro, cian, m * 0.7);
-  col = mix(col, blanco, ola * 0.25);
-  vec3 base = vec3(0.07, 0.07, 0.08);
-  gl_FragColor = vec4(base + col * (0.35 + ola * 1.7) * k, 1.0);
+  vec3 oro = vec3(1.0, 0.7, 0.16);
+  vec3 cian = vec3(0.2, 0.82, 1.0);
+  vec3 calido = vec3(1.0, 0.9, 0.65);
+  vec3 tono = fase < 0.5 ? oro : (fase < 1.5 ? cian : calido);
+  float m = 0.5 + 0.5 * sin(x * 0.08 - t * 1.3 + fase * 2.1);
+  tono = mix(tono, oro, m * 0.35);
+  vec3 luz = tono * (0.14 + ola * 2.8) * k;
+  col += luz * (0.45 + 0.75 * dif) + tono * borde * (0.15 + ola * 0.9) * k;
+  gl_FragColor = vec4(col, 1.0);
 }`;
 
-/** Cable (o varios) que va por el suelo; la luz corre en olas de color. `nivel` devuelve la intensidad (0 a 1). */
-export function Cables({ rutas, grosor = 0.07, nivel }: { rutas: THREE.Vector3[][]; grosor?: number; nivel: () => number }) {
+/** Desplaza una ruta hacia un lado (para armar el grupo de fases en paralelo). */
+function desplazar(curva: THREE.Curve<THREE.Vector3>, lado: number, alto: number, n: number) {
+  const out: THREE.Vector3[] = [];
+  const tg = new THREE.Vector3();
+  for (let i = 0; i <= n; i++) {
+    const u = i / n;
+    const p = curva.getPointAt(u);
+    curva.getTangentAt(u, tg);
+    const s = new THREE.Vector3(-tg.z, 0, tg.x).normalize();
+    out.push(p.addScaledVector(s, lado).setY(p.y + alto));
+  }
+  return new THREE.CatmullRomCurve3(out);
+}
+
+/**
+ * Cables en el suelo: cada ruta lleva `fases` cables redondos en paralelo y, si `zanja`,
+ * van dentro de una canaleta de concreto. La luz corre en olas; `nivel` da la intensidad (0 a 1).
+ */
+export function Cables({
+  rutas,
+  grosor = 0.07,
+  fases = 3,
+  zanja = false,
+  nivel,
+}: {
+  rutas: THREE.Vector3[][];
+  grosor?: number;
+  fases?: number;
+  zanja?: boolean;
+  nivel: () => number;
+}) {
   const mats = useRef<THREE.ShaderMaterial[]>([]);
-  const geos = useMemo(
-    () =>
-      rutas.map((pts) => {
-        const curva = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.05);
-        return { geo: new THREE.TubeGeometry(curva, Math.max(16, Math.round(curva.getLength() * 2)), grosor, 6, false), largo: curva.getLength() };
-      }),
-    [rutas, grosor],
-  );
+  const bordes = useRef<THREE.InstancedMesh>(null);
+  const pisos = useRef<THREE.InstancedMesh>(null);
+
+  const { tubos, tramos } = useMemo(() => {
+    const tubos: { geo: THREE.TubeGeometry; largo: number; fase: number }[] = [];
+    const tramos: { p: THREE.Vector3; ang: number; largo: number }[] = [];
+    for (const pts of rutas) {
+      const base = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.05);
+      const largo = base.getLength();
+      const n = Math.max(8, Math.round(largo * 2));
+      for (let f = 0; f < fases; f++) {
+        const lado = (f - (fases - 1) / 2) * grosor * 2.4;
+        const c = desplazar(base, lado, grosor * (f % 2 === 0 ? 1 : 1.25), n);
+        tubos.push({ geo: new THREE.TubeGeometry(c, n * 2, grosor, 10, false), largo, fase: f % 3 });
+      }
+      if (zanja) {
+        const paso = 1;
+        const k = Math.max(1, Math.round(largo / paso));
+        const tg = new THREE.Vector3();
+        for (let i = 0; i < k; i++) {
+          const u = (i + 0.5) / k;
+          const p = base.getPointAt(u);
+          base.getTangentAt(u, tg);
+          tramos.push({ p, ang: Math.atan2(tg.x, tg.z), largo: largo / k + 0.04 });
+        }
+      }
+    }
+    return { tubos, tramos };
+  }, [rutas, grosor, fases, zanja]);
+
+  useLayoutEffect(() => {
+    if (!zanja || !bordes.current || !pisos.current) return;
+    const m = new THREE.Object3D();
+    const ancho = fases * grosor * 2.4 + 0.35;
+    let b = 0;
+    tramos.forEach((s, i) => {
+      for (const lado of [-1, 1]) {
+        m.position.set(s.p.x, 0.12, s.p.z);
+        m.rotation.set(0, s.ang, 0);
+        m.translateX((lado * ancho) / 2);
+        m.scale.set(1, 1, s.largo);
+        m.updateMatrix();
+        bordes.current!.setMatrixAt(b++, m.matrix);
+      }
+      m.position.set(s.p.x, 0.02, s.p.z);
+      m.rotation.set(0, s.ang, 0);
+      m.scale.set(ancho, 1, s.largo);
+      m.updateMatrix();
+      pisos.current!.setMatrixAt(i, m.matrix);
+    });
+    bordes.current.instanceMatrix.needsUpdate = true;
+    pisos.current.instanceMatrix.needsUpdate = true;
+  }, [tramos, zanja, fases, grosor]);
+
   useFrame(({ clock }) => {
     const k = nivel();
     mats.current.forEach((m) => {
@@ -387,19 +484,32 @@ export function Cables({ rutas, grosor = 0.07, nivel }: { rutas: THREE.Vector3[]
       m.uniforms.k.value = k;
     });
   });
+
   return (
     <group>
-      {geos.map((g, i) => (
-        <mesh key={i} geometry={g.geo}>
+      {tubos.map((g, i) => (
+        <mesh key={i} geometry={g.geo} castShadow>
           <shaderMaterial
             ref={(m) => void (mats.current[i] = m!)}
             vertexShader={cableVert}
             fragmentShader={cableFrag}
             toneMapped={false}
-            uniforms={{ t: { value: 0 }, k: { value: 0.5 }, largo: { value: g.largo } }}
+            uniforms={{ t: { value: 0 }, k: { value: 0.5 }, largo: { value: g.largo }, fase: { value: g.fase } }}
           />
         </mesh>
       ))}
+      {zanja && (
+        <>
+          <instancedMesh ref={bordes} args={[undefined, undefined, tramos.length * 2]} castShadow receiveShadow>
+            <boxGeometry args={[0.14, 0.24, 1]} />
+            <meshStandardMaterial color="#b9b6ad" roughness={0.9} />
+          </instancedMesh>
+          <instancedMesh ref={pisos} args={[undefined, undefined, tramos.length]} receiveShadow>
+            <boxGeometry args={[1, 0.04, 1]} />
+            <meshStandardMaterial color="#3e3c38" roughness={1} />
+          </instancedMesh>
+        </>
+      )}
     </group>
   );
 }

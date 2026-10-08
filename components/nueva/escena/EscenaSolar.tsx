@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Html } from "@react-three/drei";
+import { Html, RoundedBox } from "@react-three/drei";
 import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
 import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
@@ -29,6 +29,9 @@ const COLS = 26;
 const filaX = (f: number) => (f - (FILAS - 1) / 2) * SEP_X;
 const colZ = (k: number) => (k - (COLS - 1) / 2) * SEP_Z - 4;
 const HEROE = { fila: 7, col: 21 };
+// Inversores de string al final de cada fila
+const INV_DX = 0.9;
+const INV_Z = colZ(COLS - 1) + 1.1;
 const giroSol = (p: number) => lerp(0.6, -0.45, tramo(p, 0, 1));
 
 const zonas: Zona[] = [
@@ -55,7 +58,6 @@ function Planta({ progress }: { progress: MotionValue<number> }) {
   const paneles = useRef<THREE.InstancedMesh>(null);
   const ejes = useRef<THREE.InstancedMesh>(null);
   const postes = useRef<THREE.InstancedMesh>(null);
-  const inversores = useRef<THREE.InstancedMesh>(null);
 
   const mats = useMemo(() => {
     const lado = new THREE.MeshStandardMaterial({ color: "#c3ccd8", metalness: 0.8, roughness: 0.35 });
@@ -79,15 +81,8 @@ function Planta({ progress }: { progress: MotionValue<number> }) {
       m.scale.set(1, COLS * SEP_Z, 1);
       m.updateMatrix();
       ejes.current!.setMatrixAt(f, m.matrix);
-      // Inversor de string al final de cada fila
-      m.position.set(filaX(f) + 0.9, 0.95, colZ(COLS - 1) + 1.1);
-      m.rotation.set(0, 0, 0);
-      m.scale.set(1, 1, 1);
-      m.updateMatrix();
-      inversores.current!.setMatrixAt(f, m.matrix);
     }
     ejes.current!.instanceMatrix.needsUpdate = true;
-    inversores.current!.instanceMatrix.needsUpdate = true;
     let n = 0;
     for (let f = 0; f < FILAS; f++)
       for (let k = 0; k < COLS; k += 4) {
@@ -130,10 +125,101 @@ function Planta({ progress }: { progress: MotionValue<number> }) {
         <cylinderGeometry args={[0.045, 0.06, 1, 6]} />
         <meshStandardMaterial color="#6f7a8a" metalness={0.6} roughness={0.5} />
       </instancedMesh>
-      <instancedMesh ref={inversores} args={[undefined, undefined, FILAS]} castShadow>
-        <boxGeometry args={[0.55, 0.7, 0.24]} />
-        <meshStandardMaterial color="#f2f4f7" metalness={0.2} roughness={0.35} />
-      </instancedMesh>
+    </group>
+  );
+}
+
+/* ---------- Inversores de string (estilo equipo blanco, con aletas, luces y conectores) ---------- */
+
+type MatsInv = Record<"cuerpo" | "frente" | "aletas" | "acero" | "conector" | "oro" | "led" | "techo" | "concreto", THREE.MeshStandardMaterial>;
+
+function Inversor({ x, m, simple }: { x: number; m: MatsInv; simple: boolean }) {
+  return (
+    <group position={[x, 0, INV_Z]}>
+      {/* Base de concreto, postes y travesaños galvanizados */}
+      <mesh position={[0, 0.04, -0.2]} material={m.concreto} receiveShadow>
+        <boxGeometry args={[0.9, 0.08, 0.36]} />
+      </mesh>
+      {[-0.32, 0.32].map((dx) => (
+        <mesh key={dx} position={[dx, 0.82, -0.2]} material={m.acero} castShadow>
+          <boxGeometry args={[0.06, 1.62, 0.06]} />
+        </mesh>
+      ))}
+      {[0.72, 1.45].map((y) => (
+        <mesh key={y} position={[0, y, -0.2]} material={m.acero}>
+          <boxGeometry args={[0.74, 0.05, 0.04]} />
+        </mesh>
+      ))}
+      {/* Techito que le da sombra */}
+      <mesh position={[0, 1.7, -0.06]} rotation={[0.28, 0, 0]} material={m.techo} castShadow>
+        <boxGeometry args={[0.88, 0.025, 0.52]} />
+      </mesh>
+      {/* Cuerpo del inversor */}
+      <RoundedBox args={[0.62, 0.8, 0.24]} radius={0.045} smoothness={3} position={[0, 1.1, -0.04]} material={m.cuerpo} castShadow />
+      {!simple && (
+        <>
+          {/* Aletas de disipación a los lados */}
+          {[-1, 1].flatMap((s) =>
+            [0, 1, 2, 3, 4, 5, 6].map((i) => (
+              <mesh key={`${s}${i}`} position={[s * 0.322, 0.8 + i * 0.1, -0.06]} material={m.aletas}>
+                <boxGeometry args={[0.035, 0.05, 0.2]} />
+              </mesh>
+            )),
+          )}
+          {/* Panel frontal con franja dorada y luces de estado */}
+          <mesh position={[0, 1.3, 0.083]} material={m.frente}>
+            <boxGeometry args={[0.38, 0.15, 0.01]} />
+          </mesh>
+          <mesh position={[0, 1.32, 0.09]} material={m.oro}>
+            <boxGeometry args={[0.22, 0.022, 0.004]} />
+          </mesh>
+          {[-0.06, 0, 0.06].map((dx) => (
+            <mesh key={dx} position={[dx, 1.255, 0.09]} material={m.led}>
+              <sphereGeometry args={[0.013, 8, 8]} />
+            </mesh>
+          ))}
+          {/* Placa de datos */}
+          <mesh position={[0.19, 0.95, 0.083]} material={m.aletas}>
+            <boxGeometry args={[0.12, 0.08, 0.005]} />
+          </mesh>
+          {/* Conectores abajo */}
+          <mesh position={[0, 0.685, -0.03]} material={m.conector}>
+            <boxGeometry args={[0.5, 0.05, 0.18]} />
+          </mesh>
+          {[-0.18, -0.1, -0.02, 0.06, 0.14].map((dx) => (
+            <mesh key={dx} position={[dx, 0.64, 0]} material={m.conector}>
+              <cylinderGeometry args={[0.018, 0.018, 0.07, 8]} />
+            </mesh>
+          ))}
+        </>
+      )}
+    </group>
+  );
+}
+
+function Inversores({ movil, energia }: { movil: boolean; energia: () => number }) {
+  const m = useMemo<MatsInv>(
+    () => ({
+      cuerpo: new THREE.MeshStandardMaterial({ color: "#f6f8fb", metalness: 0.15, roughness: 0.26 }),
+      frente: new THREE.MeshStandardMaterial({ color: "#1b2230", metalness: 0.4, roughness: 0.25 }),
+      aletas: new THREE.MeshStandardMaterial({ color: "#c7ced8", metalness: 0.6, roughness: 0.35 }),
+      acero: new THREE.MeshStandardMaterial({ color: "#8f99a6", metalness: 0.75, roughness: 0.35 }),
+      conector: new THREE.MeshStandardMaterial({ color: "#14171c", roughness: 0.5 }),
+      oro: new THREE.MeshStandardMaterial({ color: "#f0a500", emissive: "#f0a500", emissiveIntensity: 0.6 }),
+      led: new THREE.MeshStandardMaterial({ color: "#3dff8a", emissive: "#3dff8a", emissiveIntensity: 2, toneMapped: false }),
+      techo: new THREE.MeshStandardMaterial({ color: "#e1e6ec", metalness: 0.5, roughness: 0.3 }),
+      concreto: new THREE.MeshStandardMaterial({ color: "#b0ada4", roughness: 0.9 }),
+    }),
+    [],
+  );
+  useFrame(({ clock }) => {
+    m.led.emissiveIntensity = 1.2 + energia() * (1.6 + Math.sin(clock.elapsedTime * 3) * 0.9);
+  });
+  return (
+    <group>
+      {Array.from({ length: FILAS }).map((_, f) => (
+        <Inversor key={f} x={filaX(f) + INV_DX} m={m} simple={movil} />
+      ))}
     </group>
   );
 }
@@ -661,15 +747,19 @@ function Mundo({ progress, raton, listo, movil }: Props) {
   const hora = useMemo(() => () => progress.get(), [progress]);
 
   // Cables: de cada inversor a la troncal, la troncal hasta la estación y de ahí a la fábrica
-  const rutas = useMemo(() => {
-    const y = 0.14;
-    const V = (x: number, z: number) => new THREE.Vector3(x, y, z);
-    const zInv = colZ(COLS - 1) + 1.1;
-    const out: THREE.Vector3[][] = [];
-    for (let f = 0; f < FILAS; f++) out.push([V(filaX(f) + 0.9, zInv + 0.1), V(filaX(f) + 0.9, zInv + 0.9), V(filaX(f) + 1.6, 11.8)]);
-    out.push([V(filaX(0) + 1.6, 11.8), V(10, 11.8), V(30, 11.8), V(33.5, 9.5), V(34.5, 3.2)]);
-    out.push([V(38.3, -1), V(40, -3.5), V(43.5, -6.5), V(47, -8.7)]);
-    return out;
+  // Cables: ramal de cada inversor a la zanja, troncal hasta la subestación y de ahí a la fábrica
+  const { ramales, troncales } = useMemo(() => {
+    const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const ramales: THREE.Vector3[][] = [];
+    for (let f = 0; f < FILAS; f++) {
+      const x = filaX(f) + INV_DX;
+      ramales.push([V(x, 0.62, INV_Z - 0.02), V(x, 0.3, INV_Z + 0.12), V(x, 0.1, INV_Z + 0.5), V(x + 0.4, 0.1, 11.3), V(x + 0.7, 0.12, 11.8)]);
+    }
+    const troncales = [
+      [V(filaX(0) + 0.6, 0.1, 11.8), V(10, 0.1, 11.8), V(30, 0.1, 11.8), V(33.5, 0.1, 9.5), V(34.5, 0.1, 3.2)],
+      [V(38.3, 0.1, -1), V(40, 0.1, -3.5), V(43.5, 0.1, -6.5), V(47, 0.1, -8.7)],
+    ];
+    return { ramales, troncales };
   }, []);
 
   const rutasCamara = useMemo(() => {
@@ -712,7 +802,9 @@ function Mundo({ progress, raton, listo, movil }: Props) {
       <Arboles zonas={zonas} n={movil ? 60 : 120} rmin={55} rmax={170} />
       <Planta progress={progress} />
       <PanelHeroe progress={progress} base={base} />
-      <Cables rutas={rutas} nivel={energia} grosor={0.09} />
+      <Cables rutas={ramales} nivel={energia} grosor={0.035} fases={2} />
+      <Cables rutas={troncales} nivel={energia} grosor={0.07} fases={3} zanja />
+      <Inversores movil={movil} energia={energia} />
       <Skid energia={energia} />
       <Fabrica energia={energia} />
     </>
