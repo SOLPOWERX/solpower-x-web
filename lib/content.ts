@@ -125,7 +125,7 @@ export const norms = [
 
 export const values = [
   { title: "Ética e ingeniería", body: "Transparencia total en presupuestos y proyecciones de ahorro a largo plazo." },
-  { title: "Un solo responsable", body: "El mismo ingeniero diseña, firma y responde ante el inspector y el operador de red." },
+  { title: "Un solo responsable", body: "El mismo equipo diseña, firma y responde ante el inspector y el operador de red." },
   { title: "Simulación antes de invertir", body: "Sabes cuánto vas a generar y ahorrar antes de comprar un solo panel." },
   { title: "Impacto sostenible", body: "Comprometidos con la transición energética justa y normada en Colombia." },
 ];

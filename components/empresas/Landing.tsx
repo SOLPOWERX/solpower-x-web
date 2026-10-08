@@ -115,9 +115,20 @@ export default function Landing() {
       {/* Barra simple: logo + contacto, sin menú que distraiga */}
       <header className="fixed inset-x-0 top-3 z-40 px-3">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-full bg-azul-950/80 py-2 pl-4 pr-2 shadow-[0_10px_30px_-15px_rgba(4,15,38,.6)] backdrop-blur-xl">
-          <a href="/" aria-label="SOLPOWER X, inicio">
-            <Logo light size={34} />
-          </a>
+          <div className="flex items-center gap-2">
+            <a
+              href={site.inicio}
+              aria-label="Volver al inicio"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-sol hover:text-azul-950"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden>
+                <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </a>
+            <a href={site.inicio} aria-label="SOLPOWER X, inicio">
+              <Logo light size={34} />
+            </a>
+          </div>
           <div className="flex items-center gap-2">
             <a
               href={`tel:${site.phoneRaw}`}
@@ -317,14 +328,14 @@ export default function Landing() {
                 Llamar al {site.phone}
               </a>
             </div>
-            <p className="mt-8 text-sm text-white/60">Ing. {site.engineer} · Ingeniero electricista</p>
+            <p className="mt-8 text-sm text-white/60">{site.name} · Energía solar e ingeniería eléctrica</p>
           </div>
         </section>
       </main>
 
       <footer className="bg-azul-950 py-8 text-center text-sm text-white/50">
         © {new Date().getFullYear()} {site.name} ·{" "}
-        <a href="/" className="underline-offset-4 hover:text-white hover:underline">
+        <a href={site.inicio} className="underline-offset-4 hover:text-white hover:underline">
           solpowerx.com
         </a>
       </footer>

@@ -13,7 +13,7 @@ export default function IngenieriaDos() {
           <div>
             <p className="mb-4 font-semibold text-sol">Ingeniería</p>
             <h2 className="title max-w-2xl text-azul">
-              Un ingeniero que diseña, <span className="text-sol">firma y responde</span>
+              Diseñamos, firmamos <span className="text-sol">y respondemos</span>
             </h2>
           </div>
           <p className="max-w-sm text-gris">Dos frentes de trabajo, el mismo cumplimiento: RETIE, NTC 2050 e IEEE 80.</p>

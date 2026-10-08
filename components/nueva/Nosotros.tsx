@@ -23,8 +23,8 @@ export default function Nosotros() {
               <Image src="/isotipo.png" alt="" width={44} height={38} />
             </span>
             <span>
-              <span className="block text-lg font-semibold">{site.engineer}</span>
-              <span className="block text-sm text-white/70">Ingeniero electricista · Fundador de SOLPOWER X</span>
+              <span className="block text-lg font-semibold">{site.name}</span>
+              <span className="block text-sm text-white/70">Energía solar e ingeniería eléctrica en Colombia</span>
             </span>
           </div>
         </motion.div>
@@ -32,11 +32,11 @@ export default function Nosotros() {
         <div>
           <p className="mb-4 font-semibold text-sol">Nosotros</p>
           <h2 className="title text-azul">
-            Ingeniería con <span className="text-sol">nombre propio</span>
+            Una empresa, <span className="text-sol">un solo responsable</span>
           </h2>
           <p className="mt-5 max-w-lg text-lg leading-relaxed text-gris">
-            SOLPOWER X nace para que cada proyecto tenga un responsable: el mismo ingeniero estudia su caso, diseña, firma y
-            responde ante el inspector y el operador de red.
+            En SOLPOWER X el mismo equipo estudia su caso, diseña, instala, certifica y responde ante el inspector y el
+            operador de red. Usted no tiene que coordinar a nadie más.
           </p>
           <ul className="mt-10 grid gap-6 sm:grid-cols-2">
             {values.map((v, i) => (

@@ -2,6 +2,8 @@
 export const site = {
   name: "SOLPOWER X",
   slogan: "Haz del sol tu mejor inversión",
+  /** Portada a la que vuelven las demás páginas. En la copia de prueba es /nueva; al publicar la portada nueva, cambiar a "/". */
+  inicio: "/nueva",
   url: (process.env.NEXT_PUBLIC_SITE_URL || "https://solpowerx.com").replace(/\/$/, ""),
   phone: "+57 312 331 2334",
   phoneRaw: "+573123312334",

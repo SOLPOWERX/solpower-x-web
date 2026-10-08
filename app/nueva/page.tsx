@@ -19,6 +19,7 @@ import Contact from "@/components/site/Contact";
 import Footer from "@/components/site/Footer";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
 import SmoothScroll from "@/components/site/SmoothScroll";
+import VolverArriba from "@/components/nueva/VolverArriba";
 
 /** Portada de PRUEBA. No reemplaza la página principal; no se indexa en Google. */
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function NuevaPortada() {
       </main>
       <Footer />
       <WhatsAppFloat />
+      <VolverArriba />
     </>
   );
 }

@@ -35,7 +35,13 @@ export default function Intro() {
   const [fase, setFase] = useState<"entra" | "sale" | "fin">("entra");
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // Solo la primera vez en cada visita: al volver de otra página no se repite
+    let vista = false;
+    try {
+      vista = sessionStorage.getItem("sx-intro") === "1";
+      sessionStorage.setItem("sx-intro", "1");
+    } catch {}
+    if (vista || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setFase("fin");
       abrir();
       return;

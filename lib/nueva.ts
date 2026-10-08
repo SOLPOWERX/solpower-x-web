@@ -110,7 +110,7 @@ export const ingenierias = [
     id: "ingenieria-solar",
     kicker: "Para clientes e instaladores",
     title: "Ingeniería solar",
-    body: "Todo lo técnico de un proyecto solar, firmado por un ingeniero electricista.",
+    body: "Todo lo técnico de un proyecto solar, con diseño y firma de ingeniería eléctrica.",
     image: `${media.engineerRoof}?w=1400&q=70&auto=format`,
     items: [
       { title: "Diseño y simulación PVsyst", body: "Producción esperada, pérdidas y tamaño óptimo del sistema." },
