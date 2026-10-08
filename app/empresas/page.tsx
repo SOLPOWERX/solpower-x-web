@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Landing from "@/components/empresas/Landing";
+import EmpresasPagina from "@/components/nueva/EmpresasPagina";
 import SmoothScroll from "@/components/site/SmoothScroll";
 import { faqsEmpresas } from "@/lib/empresas";
 
@@ -25,7 +25,7 @@ export default function EmpresasPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <SmoothScroll />
-      <Landing />
+      <EmpresasPagina />
     </>
   );
 }

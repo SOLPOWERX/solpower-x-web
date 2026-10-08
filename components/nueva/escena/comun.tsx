@@ -581,6 +581,7 @@ export function Cielo({
   sombra = 50,
   calidad = 2048,
   solDesde = -1,
+  arco = [0.05, 2.25],
 }: {
   hora: () => number;
   momentos?: Momento[];
@@ -588,6 +589,8 @@ export function Cielo({
   sombra?: number;
   calidad?: number;
   solDesde?: 1 | -1;
+  /** Ángulo del sol al inicio y al final (rad); más de π lo esconde tras el horizonte. */
+  arco?: [number, number];
 }) {
   const { scene, gl } = useThree();
   const cielo = useRef<THREE.ShaderMaterial>(null);
@@ -629,7 +632,7 @@ export function Cielo({
     m.uniforms.horizonte.value.copy(a.horizonte).lerp(b.horizonte, t);
     m.uniforms.solColor.value.copy(a.sol).lerp(b.sol, t);
     // El sol sale por un lado, sube y baja por el otro
-    const ang = lerp(0.05, 2.25, p);
+    const ang = lerp(arco[0], arco[1], p);
     v.set(solDesde * Math.cos(ang) * 70, Math.sin(ang) * 55 + 4, -90 + p * 40);
     m.uniforms.solDir.value.copy(v).normalize();
     sol.current!.position.copy(v).normalize().multiplyScalar(300).add(centro);
@@ -638,7 +641,8 @@ export function Cielo({
     li.position.copy(v).normalize().multiplyScalar(90).add(centro);
     li.color.copy(m.uniforms.solColor.value);
     li.intensity = lerp(a.luz, b.luz, t);
-    hemi.current!.intensity = 0.55 + li.intensity * 0.22;
+    hemi.current!.intensity = 0.15 + li.intensity * 0.35;
+    scene.environmentIntensity = Math.min(0.55, 0.1 + li.intensity * 0.16);
     (scene.fog as THREE.Fog).color.copy(m.uniforms.horizonte.value);
   });
 

@@ -66,7 +66,12 @@ function Roll({ text, open }: { text: string; open?: boolean }) {
   );
 }
 
-export default function HeaderNuevo() {
+/**
+ * Menú principal. En la portada (`enInicio`) los enlaces son anclas y espera a la animación de entrada;
+ * en las demás páginas los enlaces llevan a la sección de la portada.
+ */
+export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }) {
+  const ir = (h: string) => (h.startsWith("#") && !enInicio ? site.inicio + h : h);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
@@ -133,7 +138,8 @@ export default function HeaderNuevo() {
     closeTimer.current = setTimeout(() => setMenu(null), 160);
   };
 
-  const listo = useIntroListo();
+  const introLista = useIntroListo();
+  const listo = !enInicio || introLista;
   const panel = menu ? mega[menu] : null;
   if (!listo) return null;
 
@@ -172,7 +178,7 @@ export default function HeaderNuevo() {
           animate={{ clipPath: "inset(0% 0% 0% 0% round 999px)", transitionEnd: { clipPath: "none" } }}
           transition={{ duration: 1.1, delay: 0.15, ease }}
         >
-          <a href="#inicio" aria-label="SOLPOWER X, inicio" className="shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
+          <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
             <Logo light />
           </a>
 
@@ -200,7 +206,7 @@ export default function HeaderNuevo() {
                     />
                   )}
                   <a
-                    href={l.href}
+                    href={ir(l.href)}
                     onFocus={() => openMenu(l.mega ?? null)}
                     onClick={() => setMenu(null)}
                     aria-haspopup={l.mega ? "true" : undefined}
@@ -256,7 +262,7 @@ export default function HeaderNuevo() {
             </motion.a>
 
             <motion.a
-              href="#contacto"
+              href={ir("#contacto")}
               className="shine group hidden items-center gap-3 whitespace-nowrap rounded-full bg-gradient-to-r from-sol to-sol-claro py-1.5 pl-5 pr-1.5 text-sm font-semibold text-azul-950 shadow-[0_8px_30px_-8px_rgba(240,165,0,.9)] transition-shadow hover:shadow-[0_10px_40px_-6px_rgba(255,194,61,1)] sm:inline-flex"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -336,7 +342,7 @@ export default function HeaderNuevo() {
                         {panel.lista.map((l) => (
                           <li key={l.title}>
                             <a
-                              href={panel.cta.href}
+                              href={ir(panel.cta.href)}
                               onClick={() => setMenu(null)}
                               className="block rounded-xl px-2 py-1.5 transition-colors hover:bg-white/[.07]"
                             >
@@ -349,7 +355,7 @@ export default function HeaderNuevo() {
                     )}
                   </div>
                   <a
-                    href={panel.cta.href}
+                    href={ir(panel.cta.href)}
                     onClick={() => setMenu(null)}
                     className="group mt-6 inline-flex items-center gap-2 text-sm font-semibold text-sol-claro"
                   >
@@ -371,7 +377,7 @@ export default function HeaderNuevo() {
                       transition={{ delay: 0.12 + i * 0.06, duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
                     >
                       <a
-                        href={it.href}
+                        href={ir(it.href)}
                         onClick={() => setMenu(null)}
                         className="group relative block h-56 overflow-hidden rounded-[18px] ring-1 ring-inset ring-white/10"
                       >
@@ -430,7 +436,7 @@ export default function HeaderNuevo() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.15 + i * 0.06 }}
                   >
-                    <a href={l.href} onClick={() => setOpen(false)} className="flex items-baseline gap-4 py-1.5 text-3xl font-semibold">
+                    <a href={ir(l.href)} onClick={() => setOpen(false)} className="flex items-baseline gap-4 py-1.5 text-3xl font-semibold">
                       <span className="text-sm font-medium text-sol">0{i + 1}</span>
                       {l.label}
                     </a>

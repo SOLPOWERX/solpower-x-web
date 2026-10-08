@@ -30,7 +30,7 @@ export default function NuevaPortada() {
     <>
       <Intro />
       <SmoothScroll />
-      <HeaderNuevo />
+      <HeaderNuevo enInicio />
       <main>
         <HeroEscena />
         <Puertas />
