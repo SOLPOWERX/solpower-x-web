@@ -14,7 +14,7 @@ type MegaKey = "solar" | "ingenieria";
 const links: { href: string; label: string; mega?: MegaKey }[] = [
   { href: "/empresas", label: "Empresas" },
   { href: "/hogares", label: "Hogares" },
-  { href: "#ingenieria", label: "Ingeniería", mega: "ingenieria" },
+  { href: "/ingenieria", label: "Ingeniería", mega: "ingenieria" },
   { href: "#soluciones", label: "Soluciones", mega: "solar" },
   { href: "#ley-1715", label: "Beneficios Ley 1715" },
   { href: "#nosotros", label: "Nosotros" },
@@ -44,10 +44,10 @@ const mega: Record<MegaKey, Mega> = {
     kicker: "Ingeniería solar",
     title: "Para clientes e instaladores",
     body: "",
-    cta: { href: "#ingenieria-solar", label: "Ver ingeniería solar" },
+    cta: { href: "/ingenieria#solar", label: "Ver ingeniería solar" },
     lista: ingenierias[0].items,
     itemsTitle: "Servicios de ingeniería eléctrica",
-    items: engineering.map((e, i) => ({ title: e.title, tag: `0${i + 1}`, image: e.image, href: "#ingenieria-electrica" })),
+    items: engineering.map((e, i) => ({ title: e.title, tag: `0${i + 1}`, image: e.image, href: "/ingenieria#electrica" })),
   },
 };
 

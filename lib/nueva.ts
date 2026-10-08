@@ -33,7 +33,7 @@ export const puertas = [
     body: "Diseño solar para clientes e instaladores, e ingeniería eléctrica.",
     points: ["Diseño PVsyst y memorias RETIE", "Subestaciones y redes de media y baja tensión", "Calidad de energía"],
     cta: "Ver servicios de ingeniería",
-    href: "#ingenieria",
+    href: "/ingenieria",
     image: `${engineering[1].image}?w=1200&q=70&auto=format`,
   },
 ];
