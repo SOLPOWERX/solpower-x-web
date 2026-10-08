@@ -405,76 +405,98 @@ function desplazar(curva: THREE.Curve<THREE.Vector3>, lado: number, alto: number
 }
 
 /**
- * Cables en el suelo: cada ruta lleva `fases` cables redondos en paralelo y, si `zanja`,
- * van dentro de una canaleta de concreto. La luz corre en olas; `nivel` da la intensidad (0 a 1).
+ * Cables: cada ruta lleva `fases` cables redondos en paralelo. Si `enterrado`, los tramos a ras de suelo
+ * quedan medio hundidos sobre una franja de tierra removida, con mojones de señalización.
+ * La luz corre en olas; `nivel` da la intensidad (0 a 1).
  */
 export function Cables({
   rutas,
   grosor = 0.07,
   fases = 3,
-  zanja = false,
+  enterrado = false,
+  mojones = false,
   nivel,
 }: {
   rutas: THREE.Vector3[][];
   grosor?: number;
   fases?: number;
-  zanja?: boolean;
+  enterrado?: boolean;
+  mojones?: boolean;
   nivel: () => number;
 }) {
   const mats = useRef<THREE.ShaderMaterial[]>([]);
-  const bordes = useRef<THREE.InstancedMesh>(null);
-  const pisos = useRef<THREE.InstancedMesh>(null);
+  const tierra = useRef<THREE.InstancedMesh>(null);
+  const postes = useRef<THREE.InstancedMesh>(null);
+  const tapas = useRef<THREE.InstancedMesh>(null);
 
-  const { tubos, tramos } = useMemo(() => {
+  const { tubos, tramos, marcas } = useMemo(() => {
     const tubos: { geo: THREE.TubeGeometry; largo: number; fase: number }[] = [];
     const tramos: { p: THREE.Vector3; ang: number; largo: number }[] = [];
+    const marcas: THREE.Vector3[] = [];
     for (const pts of rutas) {
       const base = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.05);
       const largo = base.getLength();
       const n = Math.max(8, Math.round(largo * 2));
       for (let f = 0; f < fases; f++) {
-        const lado = (f - (fases - 1) / 2) * grosor * 2.4;
-        const c = desplazar(base, lado, grosor * (f % 2 === 0 ? 1 : 1.25), n);
+        const lado = (f - (fases - 1) / 2) * grosor * 2.3;
+        const c = desplazar(base, lado, f % 2 === 0 ? 0 : grosor * 0.2, n);
         tubos.push({ geo: new THREE.TubeGeometry(c, n * 2, grosor, 10, false), largo, fase: f % 3 });
       }
-      if (zanja) {
-        const paso = 1;
-        const k = Math.max(1, Math.round(largo / paso));
+      if (enterrado) {
+        const k = Math.max(1, Math.round(largo / 0.8));
         const tg = new THREE.Vector3();
         for (let i = 0; i < k; i++) {
           const u = (i + 0.5) / k;
           const p = base.getPointAt(u);
+          if (p.y > 0.2) continue; // solo donde el cable va por el suelo
           base.getTangentAt(u, tg);
-          tramos.push({ p, ang: Math.atan2(tg.x, tg.z), largo: largo / k + 0.04 });
+          tramos.push({ p, ang: Math.atan2(tg.x, tg.z), largo: largo / k + 0.06 });
+        }
+      }
+      if (mojones) {
+        const cada = 9;
+        const tg = new THREE.Vector3();
+        for (let d = cada / 2; d < largo - 2; d += cada) {
+          const u = d / largo;
+          const p = base.getPointAt(u);
+          if (p.y > 0.2) continue;
+          base.getTangentAt(u, tg);
+          const s = new THREE.Vector3(-tg.z, 0, tg.x).normalize();
+          marcas.push(p.clone().addScaledVector(s, fases * grosor * 1.6 + 0.45));
         }
       }
     }
-    return { tubos, tramos };
-  }, [rutas, grosor, fases, zanja]);
+    return { tubos, tramos, marcas };
+  }, [rutas, grosor, fases, enterrado, mojones]);
 
   useLayoutEffect(() => {
-    if (!zanja || !bordes.current || !pisos.current) return;
     const m = new THREE.Object3D();
-    const ancho = fases * grosor * 2.4 + 0.35;
-    let b = 0;
-    tramos.forEach((s, i) => {
-      for (const lado of [-1, 1]) {
-        m.position.set(s.p.x, 0.12, s.p.z);
+    const ancho = fases * grosor * 2.3 + 0.45;
+    if (tierra.current) {
+      tramos.forEach((s, i) => {
+        m.position.set(s.p.x, 0.03, s.p.z);
         m.rotation.set(0, s.ang, 0);
-        m.translateX((lado * ancho) / 2);
-        m.scale.set(1, 1, s.largo);
+        m.scale.set(ancho, 1, s.largo);
         m.updateMatrix();
-        bordes.current!.setMatrixAt(b++, m.matrix);
-      }
-      m.position.set(s.p.x, 0.02, s.p.z);
-      m.rotation.set(0, s.ang, 0);
-      m.scale.set(ancho, 1, s.largo);
-      m.updateMatrix();
-      pisos.current!.setMatrixAt(i, m.matrix);
-    });
-    bordes.current.instanceMatrix.needsUpdate = true;
-    pisos.current.instanceMatrix.needsUpdate = true;
-  }, [tramos, zanja, fases, grosor]);
+        tierra.current!.setMatrixAt(i, m.matrix);
+      });
+      tierra.current.instanceMatrix.needsUpdate = true;
+    }
+    if (postes.current && tapas.current) {
+      marcas.forEach((p, i) => {
+        m.rotation.set(0, 0, 0);
+        m.scale.set(1, 1, 1);
+        m.position.set(p.x, 0.28, p.z);
+        m.updateMatrix();
+        postes.current!.setMatrixAt(i, m.matrix);
+        m.position.set(p.x, 0.6, p.z);
+        m.updateMatrix();
+        tapas.current!.setMatrixAt(i, m.matrix);
+      });
+      postes.current.instanceMatrix.needsUpdate = true;
+      tapas.current.instanceMatrix.needsUpdate = true;
+    }
+  }, [tramos, marcas, fases, grosor]);
 
   useFrame(({ clock }) => {
     const k = nivel();
@@ -498,15 +520,21 @@ export function Cables({
           />
         </mesh>
       ))}
-      {zanja && (
+      {enterrado && tramos.length > 0 && (
+        <instancedMesh ref={tierra} args={[undefined, undefined, tramos.length]} receiveShadow>
+          <boxGeometry args={[1, 0.05, 1]} />
+          <meshStandardMaterial color="#5e4b36" roughness={1} envMapIntensity={0.1} />
+        </instancedMesh>
+      )}
+      {marcas.length > 0 && (
         <>
-          <instancedMesh ref={bordes} args={[undefined, undefined, tramos.length * 2]} castShadow receiveShadow>
-            <boxGeometry args={[0.14, 0.24, 1]} />
-            <meshStandardMaterial color="#b9b6ad" roughness={0.9} />
+          <instancedMesh ref={postes} args={[undefined, undefined, marcas.length]} castShadow>
+            <cylinderGeometry args={[0.06, 0.08, 0.56, 8]} />
+            <meshStandardMaterial color="#d9d6cc" roughness={0.8} />
           </instancedMesh>
-          <instancedMesh ref={pisos} args={[undefined, undefined, tramos.length]} receiveShadow>
-            <boxGeometry args={[1, 0.04, 1]} />
-            <meshStandardMaterial color="#3e3c38" roughness={1} />
+          <instancedMesh ref={tapas} args={[undefined, undefined, marcas.length]}>
+            <cylinderGeometry args={[0.065, 0.065, 0.1, 8]} />
+            <meshStandardMaterial color="#ff7a1a" emissive="#ff7a1a" emissiveIntensity={0.25} roughness={0.5} />
           </instancedMesh>
         </>
       )}

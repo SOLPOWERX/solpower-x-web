@@ -453,6 +453,15 @@ function Skid({ energia }: { energia: () => number }) {
           </mesh>
         ))}
       </group>
+      {/* Cajas por donde entran y salen los cables */}
+      <mesh position={[-1.5, 0.55, 1.37]}>
+        <boxGeometry args={[0.75, 0.32, 0.08]} />
+        <meshStandardMaterial color="#2a3039" metalness={0.5} roughness={0.4} />
+      </mesh>
+      <mesh position={[2.4, 0.6, 1.13]}>
+        <boxGeometry args={[0.75, 0.32, 0.08]} />
+        <meshStandardMaterial color="#2a3039" metalness={0.5} roughness={0.4} />
+      </mesh>
       {/* Extintor */}
       <mesh position={[-3.7, 0.45, 1.75]} castShadow>
         <cylinderGeometry args={[0.13, 0.13, 0.7, 12]} />
@@ -552,6 +561,56 @@ function Cerramiento({ energia }: { energia: () => number }) {
           <meshStandardMaterial ref={lampara} color="#fff3d6" emissive="#ffd88a" emissiveIntensity={0.6} toneMapped={false} />
         </mesh>
       </group>
+    </group>
+  );
+}
+
+/** Tablero general en la fachada de la fábrica: ahí llega la energía de la planta. */
+function TableroFabrica({ energia }: { energia: () => number }) {
+  const led = useRef<THREE.MeshStandardMaterial>(null);
+  const senal = useMemo(() => texturaSenal(), []);
+  useFrame(({ clock }) => {
+    led.current!.emissiveIntensity = 1 + energia() * (2 + Math.sin(clock.elapsedTime * 4) * 1.2);
+  });
+  return (
+    <group position={[47.5, 0, -8.5]}>
+      <mesh position={[0, 0.06, 0.05]} receiveShadow>
+        <boxGeometry args={[1.6, 0.12, 0.9]} />
+        <meshStandardMaterial color="#b0ada4" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 1.02, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.2, 1.8, 0.45]} />
+        <meshStandardMaterial color="#c3cad3" metalness={0.4} roughness={0.35} />
+      </mesh>
+      <mesh position={[0, 1.02, 0.228]}>
+        <boxGeometry args={[0.02, 1.6, 0.005]} />
+        <meshStandardMaterial color="#8f98a4" />
+      </mesh>
+      <mesh position={[0.3, 1.45, 0.229]}>
+        <boxGeometry args={[0.36, 0.22, 0.005]} />
+        <meshStandardMaterial color="#1b2230" metalness={0.4} roughness={0.2} />
+      </mesh>
+      <mesh position={[-0.3, 1.62, 0.229]}>
+        <boxGeometry args={[0.4, 0.05, 0.005]} />
+        <meshStandardMaterial color="#f0a500" emissive="#f0a500" emissiveIntensity={0.8} />
+      </mesh>
+      <mesh position={[0.3, 1.25, 0.232]}>
+        <sphereGeometry args={[0.025, 10, 10]} />
+        <meshStandardMaterial ref={led} color="#3dff8a" emissive="#3dff8a" emissiveIntensity={1.5} toneMapped={false} />
+      </mesh>
+      <mesh position={[-0.2, 1.02, 0.232]}>
+        <planeGeometry args={[0.18, 0.18]} />
+        <meshStandardMaterial map={senal} />
+      </mesh>
+      {/* Tubo que sube del tablero a la nave */}
+      <mesh position={[0, 2.5, -0.1]} castShadow>
+        <cylinderGeometry args={[0.07, 0.07, 1.4, 10]} />
+        <meshStandardMaterial color="#9aa3ae" metalness={0.6} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, 0.3, 0.24]}>
+        <boxGeometry args={[0.6, 0.25, 0.05]} />
+        <meshStandardMaterial color="#2a3039" metalness={0.5} roughness={0.4} />
+      </mesh>
     </group>
   );
 }
@@ -750,14 +809,17 @@ function Mundo({ progress, raton, listo, movil }: Props) {
   // Cables: ramal de cada inversor a la zanja, troncal hasta la subestación y de ahí a la fábrica
   const { ramales, troncales } = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
+    const S = 0.03; // a ras de suelo: el cable queda medio enterrado
     const ramales: THREE.Vector3[][] = [];
     for (let f = 0; f < FILAS; f++) {
       const x = filaX(f) + INV_DX;
-      ramales.push([V(x, 0.62, INV_Z - 0.02), V(x, 0.3, INV_Z + 0.12), V(x, 0.1, INV_Z + 0.5), V(x + 0.4, 0.1, 11.3), V(x + 0.7, 0.12, 11.8)]);
+      ramales.push([V(x, 0.62, INV_Z - 0.02), V(x, 0.3, INV_Z + 0.12), V(x, S, INV_Z + 0.5), V(x + 0.4, S, 11.3), V(x + 0.7, S, 11.8)]);
     }
     const troncales = [
-      [V(filaX(0) + 0.6, 0.1, 11.8), V(10, 0.1, 11.8), V(30, 0.1, 11.8), V(33.5, 0.1, 9.5), V(34.5, 0.1, 3.2)],
-      [V(38.3, 0.1, -1), V(40, 0.1, -3.5), V(43.5, 0.1, -6.5), V(47, 0.1, -8.7)],
+      // Planta → entra por la puerta de la subestación y sube al gabinete del inversor
+      [V(filaX(0) + 0.6, S, 11.8), V(10, S, 11.8), V(30, S, 11.8), V(33.6, S, 9.4), V(34, S, 6), V(33.8, S, 3.2), V(33.2, S, 1.6), V(33, 0.3, 0.85), V(33, 0.55, 0.42)],
+      // Transformador → sale por el costado, va enterrado y sube al tablero de la fábrica
+      [V(36.9, 0.6, 0.15), V(37.1, 0.25, 0.6), V(37.6, S, 1), V(39.2, S, 0.4), V(40.6, S, -1.6), V(43.5, S, -6.2), V(46.2, S, -7.3), V(47.3, 0.15, -7.9), V(47.5, 0.4, -8.22)],
     ];
     return { ramales, troncales };
   }, []);
@@ -802,8 +864,9 @@ function Mundo({ progress, raton, listo, movil }: Props) {
       <Arboles zonas={zonas} n={movil ? 60 : 120} rmin={55} rmax={170} />
       <Planta progress={progress} />
       <PanelHeroe progress={progress} base={base} />
-      <Cables rutas={ramales} nivel={energia} grosor={0.035} fases={2} />
-      <Cables rutas={troncales} nivel={energia} grosor={0.07} fases={3} zanja />
+      <Cables rutas={ramales} nivel={energia} grosor={0.03} fases={3} enterrado />
+      <Cables rutas={troncales} nivel={energia} grosor={0.07} fases={3} enterrado mojones />
+      <TableroFabrica energia={energia} />
       <Inversores movil={movil} energia={energia} />
       <Skid energia={energia} />
       <Fabrica energia={energia} />
