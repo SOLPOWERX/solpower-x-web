@@ -2,171 +2,96 @@
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
+import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
-import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { MotionValue } from "framer-motion";
+import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, texturaLamina, texturaRejilla, tramo, type Camino, type Zona } from "./comun";
 
 /*
- * Una sola escena 3D que cambia con el scroll:
- * amanecer sobre una planta solar → los paneles siguen al sol → la cámara baja a un panel
- * → el panel se desarma en capas → vuelve a su lugar → vista aérea con la energía llegando a una empresa.
+ * Portada: una sola escena 3D que cambia con el scroll.
+ * Amanecer sobre la planta → los paneles siguen al sol → un panel sube y se desarma
+ * → vuelve a su lugar → vista aérea con la energía corriendo por los cables hasta la fábrica.
  */
 
 type Raton = MutableRefObject<{ x: number; y: number }>;
 type Props = { progress: MotionValue<number>; raton: Raton; listo: boolean; movil: boolean };
 
-const c01 = (v: number) => Math.min(1, Math.max(0, v));
-/** 0 antes de a, 1 después de b, suave entre ambos. */
-const tramo = (v: number, a: number, b: number) => {
-  const t = c01((v - a) / (b - a));
-  return t * t * (3 - 2 * t);
-};
-const lerp = THREE.MathUtils.lerp;
-
-// Medidas del panel (portrait sobre seguidor de un eje: largo en X, ancho en Z)
+// Panel en seguidor de un eje: largo en X, ancho en Z
 const PL = 1.65;
 const PA = 1;
-const ALTO = 1.25; // altura del eje del seguidor
+const ALTO = 1.25;
+const SEP_X = 3.7;
+const SEP_Z = PA + 0.06;
+const FILAS = 15;
+const COLS = 26;
+const filaX = (f: number) => (f - (FILAS - 1) / 2) * SEP_X;
+const colZ = (k: number) => (k - (COLS - 1) / 2) * SEP_Z - 4;
+const HEROE = { fila: 7, col: 21 };
+const giroSol = (p: number) => lerp(0.6, -0.45, tramo(p, 0, 1));
 
-function texturaCeldas(marco: boolean) {
-  const c = document.createElement("canvas");
-  c.width = 420;
-  c.height = 256;
-  const g = c.getContext("2d")!;
-  g.fillStyle = "#081633";
-  g.fillRect(0, 0, c.width, c.height);
-  const cols = 10;
-  const rows = 6;
-  const pad = marco ? 12 : 6;
-  const gap = 4;
-  const cw = (c.width - pad * 2 - gap * (cols - 1)) / cols;
-  const ch = (c.height - pad * 2 - gap * (rows - 1)) / rows;
-  for (let r = 0; r < rows; r++)
-    for (let k = 0; k < cols; k++) {
-      const x = pad + k * (cw + gap);
-      const y = pad + r * (ch + gap);
-      const gr = g.createLinearGradient(x, y, x + cw, y + ch);
-      gr.addColorStop(0, "#2f6ccc");
-      gr.addColorStop(0.55, "#163f86");
-      gr.addColorStop(1, "#0c2a5e");
-      g.fillStyle = gr;
-      g.fillRect(x, y, cw, ch);
-      g.fillStyle = "rgba(255,255,255,.28)";
-      g.fillRect(x, y + ch / 3, cw, 1.4);
-      g.fillRect(x, y + (2 * ch) / 3, cw, 1.4);
-    }
-  if (marco) {
-    g.strokeStyle = "#cfd8e5";
-    g.lineWidth = 10;
-    g.strokeRect(5, 5, c.width - 10, c.height - 10);
-  }
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 8;
-  return t;
-}
-
-function texturaBrillo() {
-  const c = document.createElement("canvas");
-  c.width = c.height = 256;
-  const g = c.getContext("2d")!;
-  const gr = g.createRadialGradient(128, 128, 0, 128, 128, 128);
-  gr.addColorStop(0, "rgba(255,244,214,1)");
-  gr.addColorStop(0.18, "rgba(255,206,92,.85)");
-  gr.addColorStop(0.45, "rgba(240,165,0,.25)");
-  gr.addColorStop(1, "rgba(240,165,0,0)");
-  g.fillStyle = gr;
-  g.fillRect(0, 0, 256, 256);
-  const t = new THREE.CanvasTexture(c);
-  t.colorSpace = THREE.SRGBColorSpace;
-  return t;
-}
-
-/* Cielo: degradado que pasa del amanecer al día y a la tarde */
-const cieloVert = /* glsl */ `
-varying vec3 vPos;
-void main() { vPos = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * viewMatrix * vec4(vPos, 1.0); }`;
-const cieloFrag = /* glsl */ `
-uniform vec3 arriba; uniform vec3 horizonte; uniform vec3 solDir; uniform vec3 solColor;
-varying vec3 vPos;
-void main() {
-  vec3 d = normalize(vPos);
-  float h = clamp(d.y * 1.6, 0.0, 1.0);
-  vec3 col = mix(horizonte, arriba, pow(h, 0.7));
-  float s = max(dot(d, normalize(solDir)), 0.0);
-  col += solColor * (pow(s, 12.0) * 0.55 + pow(s, 3.0) * 0.18);
-  gl_FragColor = vec4(col, 1.0);
-}`;
-
-const C = (h: string) => new THREE.Color(h);
-// Amanecer → mañana dorada → día → atardecer
-const paleta = [
-  { p: 0, arriba: C("#0a1a3f"), horizonte: C("#ff8a3d"), sol: C("#ff9a3c"), suelo: C("#2c2a26"), luz: 1.3 },
-  { p: 0.3, arriba: C("#2a5fae"), horizonte: C("#ffc58a"), sol: C("#ffd9a0"), suelo: C("#4a5a3a"), luz: 2.2 },
-  { p: 0.65, arriba: C("#2f74d6"), horizonte: C("#cfe6ff"), sol: C("#fff4dc"), suelo: C("#55703f"), luz: 2.7 },
-  { p: 1, arriba: C("#142a5c"), horizonte: C("#ff9e4a"), sol: C("#ffb347"), suelo: C("#3b3a2c"), luz: 1.8 },
+const zonas: Zona[] = [
+  { x0: -29, x1: 29, z0: -20, z1: 13, color: "#8f8b7b" }, // planta (grava)
+  { x0: 31, x1: 38, z0: -5, z1: 3, color: "#a7a69d" }, // estación inversora
+  { x0: 36, x1: 74, z0: -28, z1: 1, color: "#a3a29a" }, // patio de la fábrica
 ];
-function tramoPaleta(p: number) {
-  let i = 0;
-  while (i < paleta.length - 2 && p > paleta[i + 1].p) i++;
-  return { a: paleta[i], b: paleta[i + 1], t: tramo(p, paleta[i].p, paleta[i + 1].p) };
-}
-function colorEn(p: number, k: "arriba" | "horizonte" | "sol" | "suelo", out: THREE.Color) {
-  const { a, b, t } = tramoPaleta(p);
-  return out.copy(a[k]).lerp(b[k], t);
-}
+const caminos: Camino[] = [
+  [
+    [-140, 17],
+    [34, 17],
+    [40, 9],
+    [40, 1],
+  ],
+  [
+    [74, -12],
+    [170, -40],
+  ],
+];
 
-/** Posición del sol: sale por el este (-X), sube y baja hacia la tarde. */
-function solEn(p: number, out: THREE.Vector3) {
-  const ang = lerp(0.04, 2.2, p);
-  return out.set(-Math.cos(ang) * 70, Math.sin(ang) * 55 + 3, -90 + p * 40);
-}
+/* ---------- Planta solar ---------- */
 
-/* ---------- Planta solar con instancias ---------- */
-
-function Planta({ progress, movil, heroIdx }: { progress: MotionValue<number>; movil: boolean; heroIdx: { fila: number; col: number } }) {
-  const filas = movil ? 9 : 15;
-  const cols = movil ? 16 : 26;
-  const sepX = 3.7;
-  const sepZ = PA + 0.06;
+function Planta({ progress }: { progress: MotionValue<number> }) {
   const paneles = useRef<THREE.InstancedMesh>(null);
   const ejes = useRef<THREE.InstancedMesh>(null);
   const postes = useRef<THREE.InstancedMesh>(null);
+  const inversores = useRef<THREE.InstancedMesh>(null);
 
   const mats = useMemo(() => {
     const lado = new THREE.MeshStandardMaterial({ color: "#c3ccd8", metalness: 0.8, roughness: 0.35 });
-    const cara = new THREE.MeshStandardMaterial({ map: texturaCeldas(true), metalness: 0.35, roughness: 0.22 });
+    const cara = new THREE.MeshStandardMaterial({ map: texturaCeldas(true), metalness: 0.45, roughness: 0.18 });
     const fondo = new THREE.MeshStandardMaterial({ color: "#d7dde6", roughness: 0.8 });
     return [lado, lado, cara, fondo, lado, lado];
   }, []);
 
   const pos = useMemo(() => {
     const out: { x: number; z: number }[] = [];
-    for (let f = 0; f < filas; f++)
-      for (let k = 0; k < cols; k++) {
-        if (f === heroIdx.fila && k === heroIdx.col) continue;
-        out.push({ x: (f - (filas - 1) / 2) * sepX, z: (k - (cols - 1) / 2) * sepZ - 4 });
-      }
+    for (let f = 0; f < FILAS; f++)
+      for (let k = 0; k < COLS; k++) if (!(f === HEROE.fila && k === HEROE.col)) out.push({ x: filaX(f), z: colZ(k) });
     return out;
-  }, [filas, cols, heroIdx]);
-
+  }, []);
   const m = useMemo(() => new THREE.Object3D(), []);
 
   useLayoutEffect(() => {
-    // Ejes de los seguidores y postes (no se mueven)
-    for (let f = 0; f < filas; f++) {
-      m.position.set((f - (filas - 1) / 2) * sepX, ALTO - 0.06, -4);
+    for (let f = 0; f < FILAS; f++) {
+      m.position.set(filaX(f), ALTO - 0.06, -4);
       m.rotation.set(Math.PI / 2, 0, 0);
-      m.scale.set(1, cols * sepZ, 1);
+      m.scale.set(1, COLS * SEP_Z, 1);
       m.updateMatrix();
       ejes.current!.setMatrixAt(f, m.matrix);
+      // Inversor de string al final de cada fila
+      m.position.set(filaX(f) + 0.9, 0.95, colZ(COLS - 1) + 1.1);
+      m.rotation.set(0, 0, 0);
+      m.scale.set(1, 1, 1);
+      m.updateMatrix();
+      inversores.current!.setMatrixAt(f, m.matrix);
     }
     ejes.current!.instanceMatrix.needsUpdate = true;
+    inversores.current!.instanceMatrix.needsUpdate = true;
     let n = 0;
-    for (let f = 0; f < filas; f++)
-      for (let k = 0; k < cols; k += 4) {
-        m.position.set((f - (filas - 1) / 2) * sepX, ALTO / 2, (k - (cols - 1) / 2) * sepZ - 4);
+    for (let f = 0; f < FILAS; f++)
+      for (let k = 0; k < COLS; k += 4) {
+        m.position.set(filaX(f), ALTO / 2, colZ(k));
         m.rotation.set(0, 0, 0);
         m.scale.set(1, ALTO, 1);
         m.updateMatrix();
@@ -174,15 +99,14 @@ function Planta({ progress, movil, heroIdx }: { progress: MotionValue<number>; m
       }
     postes.current!.count = n;
     postes.current!.instanceMatrix.needsUpdate = true;
-  }, [filas, cols, m]);
+  }, [m]);
 
   const ultimo = useRef(-1);
   useFrame(() => {
     const p = progress.get();
     if (Math.abs(p - ultimo.current) < 0.0005) return;
     ultimo.current = p;
-    // Los paneles siguen al sol: de cara al este al amanecer, casi planos al mediodía, al oeste en la tarde
-    const giro = lerp(0.6, -0.45, tramo(p, 0, 1));
+    const giro = giroSol(p);
     pos.forEach((q, i) => {
       m.position.set(q.x, ALTO, q.z);
       m.rotation.set(0, 0, giro);
@@ -195,16 +119,20 @@ function Planta({ progress, movil, heroIdx }: { progress: MotionValue<number>; m
 
   return (
     <group>
-      <instancedMesh ref={paneles} args={[undefined, undefined, pos.length]} material={mats}>
+      <instancedMesh ref={paneles} args={[undefined, undefined, pos.length]} material={mats} castShadow receiveShadow>
         <boxGeometry args={[PL, 0.045, PA]} />
       </instancedMesh>
-      <instancedMesh ref={ejes} args={[undefined, undefined, filas]}>
+      <instancedMesh ref={ejes} args={[undefined, undefined, FILAS]} castShadow>
         <cylinderGeometry args={[0.05, 0.05, 1, 8]} />
         <meshStandardMaterial color="#8a94a3" metalness={0.7} roughness={0.4} />
       </instancedMesh>
-      <instancedMesh ref={postes} args={[undefined, undefined, filas * Math.ceil(cols / 4)]}>
+      <instancedMesh ref={postes} args={[undefined, undefined, FILAS * Math.ceil(COLS / 4)]} castShadow>
         <cylinderGeometry args={[0.045, 0.06, 1, 6]} />
         <meshStandardMaterial color="#6f7a8a" metalness={0.6} roughness={0.5} />
+      </instancedMesh>
+      <instancedMesh ref={inversores} args={[undefined, undefined, FILAS]} castShadow>
+        <boxGeometry args={[0.55, 0.7, 0.24]} />
+        <meshStandardMaterial color="#f2f4f7" metalness={0.2} roughness={0.35} />
       </instancedMesh>
     </group>
   );
@@ -227,17 +155,16 @@ function PanelHeroe({ progress, base }: { progress: MotionValue<number>; base: T
   const capasRef = useRef<(THREE.Group | null)[]>([]);
   const etiquetas = useRef<(HTMLDivElement | null)[]>([]);
   const celdas = useMemo(() => texturaCeldas(false), []);
-  const alto = useMemo(() => new THREE.Vector3(0, 3.3, 0), []);
+  const arriba = useMemo(() => new THREE.Vector3(), []);
+  const marco = useMemo(() => new THREE.MeshStandardMaterial({ color: "#d3dbe6", metalness: 0.85, roughness: 0.3 }), []);
 
   useFrame(() => {
     const p = progress.get();
-    const giroPlanta = lerp(0.6, -0.45, tramo(p, 0, 1));
     const sube = tramo(p, 0.27, 0.42) * (1 - tramo(p, 0.68, 0.8));
     const abre = tramo(p, 0.4, 0.5) * (1 - tramo(p, 0.6, 0.7));
     const g = grupo.current!;
-    g.position.copy(base).lerp(alto.set(base.x, 3.2, base.z + 1.6), sube);
-    // Al subir se pone de frente a la cámara
-    g.rotation.set(lerp(0, 1.05, sube), lerp(0, -0.35, sube), lerp(giroPlanta, 0, sube));
+    g.position.copy(base).lerp(arriba.set(base.x, 3.2, base.z + 1.6), sube);
+    g.rotation.set(lerp(0, 1.05, sube), lerp(0, -0.35, sube), lerp(giroSol(p), 0, sube));
     capas.forEach((c, i) => {
       const l = capasRef.current[i];
       if (l) l.position.y = c.y + abre * (i - 2) * 0.5;
@@ -246,17 +173,15 @@ function PanelHeroe({ progress, base }: { progress: MotionValue<number>; base: T
     });
   });
 
-  const marco = new THREE.MeshStandardMaterial({ color: "#d3dbe6", metalness: 0.85, roughness: 0.3 });
-
   const Etiqueta = ({ i, text }: { i: number; text: string }) =>
     text ? (
-      <Html position={[PL / 2 + 0.05, 0, 0]} center={false} zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
+      <Html position={[PL / 2 + 0.05, 0, 0]} zIndexRange={[20, 0]} style={{ pointerEvents: "none" }}>
         <div
           ref={(el) => {
             etiquetas.current[i] = el;
           }}
           className="hidden items-center gap-2 whitespace-nowrap text-[11px] font-medium text-white/90 opacity-0 md:flex"
-          style={{ transform: "translateY(-50%)" }}
+          style={{ transform: "translateY(-50%)", textShadow: "0 1px 6px rgba(4,15,38,.8)" }}
         >
           <span className="h-px w-10 bg-gradient-to-r from-sol-claro/0 to-sol-claro" />
           <span className="h-1.5 w-1.5 rounded-full bg-sol-claro shadow-[0_0_8px_2px_rgba(255,194,61,.7)]" />
@@ -265,43 +190,39 @@ function PanelHeroe({ progress, base }: { progress: MotionValue<number>; base: T
       </Html>
     ) : null;
 
+  const capa = (i: number) => (el: THREE.Group | null) => void (capasRef.current[i] = el);
+
   return (
     <group ref={grupo}>
-      {/* 0 Caja de conexiones */}
-      <group ref={(el) => void (capasRef.current[0] = el)}>
-        <mesh position={[0, 0, -0.2]}>
+      <group ref={capa(0)}>
+        <mesh position={[0, 0, -0.2]} castShadow>
           <boxGeometry args={[0.32, 0.06, 0.2]} />
           <meshStandardMaterial color="#151a22" roughness={0.6} />
         </mesh>
         <Etiqueta i={0} text={capas[0].label} />
       </group>
-      {/* 1 Marco */}
-      <group ref={(el) => void (capasRef.current[1] = el)}>
-        <mesh position={[0, 0, PA / 2 - 0.02]} material={marco}>
-          <boxGeometry args={[PL, 0.05, 0.04]} />
-        </mesh>
-        <mesh position={[0, 0, -PA / 2 + 0.02]} material={marco}>
-          <boxGeometry args={[PL, 0.05, 0.04]} />
-        </mesh>
-        <mesh position={[PL / 2 - 0.02, 0, 0]} material={marco}>
-          <boxGeometry args={[0.04, 0.05, PA]} />
-        </mesh>
-        <mesh position={[-PL / 2 + 0.02, 0, 0]} material={marco}>
-          <boxGeometry args={[0.04, 0.05, PA]} />
-        </mesh>
+      <group ref={capa(1)}>
+        {[
+          [0, PA / 2 - 0.02, PL, 0.04],
+          [0, -PA / 2 + 0.02, PL, 0.04],
+          [PL / 2 - 0.02, 0, 0.04, PA],
+          [-PL / 2 + 0.02, 0, 0.04, PA],
+        ].map(([x, z, w, d], k) => (
+          <mesh key={k} position={[x, 0, z]} material={marco} castShadow>
+            <boxGeometry args={[w, 0.05, d]} />
+          </mesh>
+        ))}
         <Etiqueta i={1} text={capas[1].label} />
       </group>
-      {/* 2 Lámina posterior */}
-      <group ref={(el) => void (capasRef.current[2] = el)}>
-        <mesh>
+      <group ref={capa(2)}>
+        <mesh castShadow>
           <boxGeometry args={[PL - 0.06, 0.006, PA - 0.06]} />
           <meshStandardMaterial color="#eef2f7" roughness={0.7} />
         </mesh>
         <Etiqueta i={2} text={capas[2].label} />
       </group>
-      {/* 3 y 5 EVA */}
       {[3, 5].map((i) => (
-        <group key={i} ref={(el) => void (capasRef.current[i] = el)}>
+        <group key={i} ref={capa(i)}>
           <mesh>
             <boxGeometry args={[PL - 0.06, 0.004, PA - 0.06]} />
             <meshStandardMaterial color="#ffffff" transparent opacity={0.22} roughness={0.3} depthWrite={false} />
@@ -309,16 +230,14 @@ function PanelHeroe({ progress, base }: { progress: MotionValue<number>; base: T
           <Etiqueta i={i} text={capas[i].label} />
         </group>
       ))}
-      {/* 4 Celdas */}
-      <group ref={(el) => void (capasRef.current[4] = el)}>
-        <mesh>
+      <group ref={capa(4)}>
+        <mesh castShadow>
           <boxGeometry args={[PL - 0.06, 0.008, PA - 0.06]} />
-          <meshStandardMaterial map={celdas} metalness={0.35} roughness={0.25} />
+          <meshStandardMaterial map={celdas} metalness={0.45} roughness={0.2} />
         </mesh>
         <Etiqueta i={4} text={capas[4].label} />
       </group>
-      {/* 6 Vidrio */}
-      <group ref={(el) => void (capasRef.current[6] = el)}>
+      <group ref={capa(6)}>
         <mesh>
           <boxGeometry args={[PL - 0.04, 0.01, PA - 0.04]} />
           <meshStandardMaterial color="#dfefff" transparent opacity={0.18} metalness={0.1} roughness={0.02} depthWrite={false} />
@@ -329,221 +248,299 @@ function PanelHeroe({ progress, base }: { progress: MotionValue<number>; base: T
   );
 }
 
-/* ---------- Empresa al fondo y energía que llega ---------- */
+/* ---------- Estación inversora tipo "skid" (equipos blancos) ---------- */
 
-function Empresa({ progress }: { progress: MotionValue<number> }) {
-  const puntos = useRef<THREE.InstancedMesh>(null);
-  const linea = useRef<THREE.Mesh>(null);
-  const N = 48;
-  const curva = useMemo(
-    () =>
-      new THREE.CatmullRomCurve3([
-        new THREE.Vector3(30, 1.4, -4),
-        new THREE.Vector3(34, 5, -12),
-        new THREE.Vector3(38, 6, -22),
-        new THREE.Vector3(42, 4.6, -30),
-      ]),
-    [],
-  );
-  const tubo = useMemo(() => new THREE.TubeGeometry(curva, 80, 0.035, 6, false), [curva]);
-  const m = useMemo(() => new THREE.Object3D(), []);
-  const techo = useMemo(() => texturaCeldas(true), []);
-
+function Skid({ energia }: { energia: () => number }) {
+  const rejilla = useMemo(() => {
+    const t = texturaRejilla();
+    t.repeat.set(2, 1);
+    return t;
+  }, []);
+  const led = useRef<THREE.MeshStandardMaterial>(null);
   useFrame(({ clock }) => {
-    const v = tramo(progress.get(), 0.8, 0.92);
-    const t = clock.elapsedTime;
-    for (let i = 0; i < N; i++) {
-      const u = (i / N + t * 0.18) % 1;
-      curva.getPointAt(u, m.position);
-      const s = v * (0.6 + 0.4 * Math.sin(u * Math.PI));
-      m.scale.setScalar(s);
-      m.updateMatrix();
-      puntos.current!.setMatrixAt(i, m.matrix);
-    }
-    puntos.current!.instanceMatrix.needsUpdate = true;
-    (linea.current!.material as THREE.MeshBasicMaterial).opacity = v * 0.5;
+    led.current!.emissiveIntensity = 1.5 + energia() * (2 + Math.sin(clock.elapsedTime * 4) * 1.5);
   });
-
   return (
-    <group>
-      {/* Edificio industrial con paneles en el techo */}
-      <group position={[46, 0, -36]}>
-        <mesh position={[0, 2.4, 0]}>
-          <boxGeometry args={[14, 4.8, 9]} />
-          <meshStandardMaterial color="#e3e8ef" roughness={0.8} />
-        </mesh>
-        <mesh position={[0, 4.95, 0]}>
-          <boxGeometry args={[14.4, 0.3, 9.4]} />
-          <meshStandardMaterial color="#9aa6b6" roughness={0.6} />
-        </mesh>
-        {Array.from({ length: 4 }).map((_, i) => (
-          <mesh key={i} position={[-4.5 + i * 3, 5.25, 0]} rotation={[0, 0, 0.15]}>
-            <boxGeometry args={[2.6, 0.06, 7.6]} />
-            <meshStandardMaterial map={techo} metalness={0.3} roughness={0.25} />
-          </mesh>
-        ))}
-        {Array.from({ length: 6 }).map((_, i) => (
-          <mesh key={i} position={[-5.5 + i * 2.2, 1.6, 4.52]}>
-            <boxGeometry args={[1.2, 1.2, 0.05]} />
-            <meshStandardMaterial color="#ffd27a" emissive="#ffb347" emissiveIntensity={0.9} />
-          </mesh>
-        ))}
-      </group>
-      {/* Inversor / transformador junto a la planta */}
-      <mesh position={[30, 0.9, -4]}>
-        <boxGeometry args={[1.6, 1.8, 1.2]} />
-        <meshStandardMaterial color="#cfd6df" metalness={0.4} roughness={0.5} />
+    <group position={[34.5, 0, -1]}>
+      <mesh position={[0, 0.18, 0]} castShadow receiveShadow>
+        <boxGeometry args={[7.4, 0.36, 3.2]} />
+        <meshStandardMaterial color="#5f6873" metalness={0.6} roughness={0.5} />
       </mesh>
-      <mesh ref={linea} geometry={tubo}>
-        <meshBasicMaterial color="#ffc23d" transparent opacity={0} />
+      {/* Gabinete del inversor */}
+      <mesh position={[-1.7, 1.66, 0]} castShadow receiveShadow>
+        <boxGeometry args={[3.6, 2.6, 2.7]} />
+        <meshStandardMaterial map={rejilla} metalness={0.25} roughness={0.35} />
       </mesh>
-      <instancedMesh ref={puntos} args={[undefined, undefined, N]}>
-        <sphereGeometry args={[0.16, 10, 10]} />
-        <meshBasicMaterial color="#ffd67a" toneMapped={false} />
-      </instancedMesh>
+      <mesh position={[-1.7, 2.6, 1.36]}>
+        <boxGeometry args={[2.6, 0.12, 0.02]} />
+        <meshStandardMaterial color="#f0a500" emissive="#f0a500" emissiveIntensity={0.6} />
+      </mesh>
+      <mesh position={[-0.2, 2.3, 1.37]}>
+        <sphereGeometry args={[0.07, 12, 12]} />
+        <meshStandardMaterial ref={led} color="#3dff8a" emissive="#3dff8a" emissiveIntensity={2} toneMapped={false} />
+      </mesh>
+      {/* Transformador con aletas y aisladores */}
+      <mesh position={[1.9, 1.45, 0]} castShadow receiveShadow>
+        <boxGeometry args={[2.3, 2.2, 2.2]} />
+        <meshStandardMaterial color="#e8ecf1" metalness={0.35} roughness={0.4} />
+      </mesh>
+      {[-0.8, -0.4, 0, 0.4, 0.8].map((z) => (
+        <mesh key={z} position={[3.12, 1.4, z]} castShadow>
+          <boxGeometry args={[0.16, 1.7, 0.05]} />
+          <meshStandardMaterial color="#d4dae2" metalness={0.4} roughness={0.4} />
+        </mesh>
+      ))}
+      {[-0.6, 0, 0.6].map((z) => (
+        <mesh key={z} position={[1.9, 2.85, z]} castShadow>
+          <cylinderGeometry args={[0.09, 0.12, 0.6, 10]} />
+          <meshStandardMaterial color="#7a4a2c" roughness={0.3} />
+        </mesh>
+      ))}
     </group>
   );
 }
 
-/* ---------- Cámara, cielo, sol y luces ---------- */
+/* ---------- Fábrica con techo solar ---------- */
 
-function Mundo({ progress, raton, listo, movil }: Props) {
-  const { camera, scene } = useThree();
-  const cielo = useRef<THREE.ShaderMaterial>(null);
-  const sol = useRef<THREE.Sprite>(null);
-  const luz = useRef<THREE.DirectionalLight>(null);
-  const hemi = useRef<THREE.HemisphereLight>(null);
-  const entrada = useRef(0);
-  const tmp = useMemo(
-    () => ({ c: new THREE.Color(), v: new THREE.Vector3(), p: new THREE.Vector3(), t: new THREE.Vector3(), mira: new THREE.Vector3() }),
-    [],
-  );
-  const brillo = useMemo(() => texturaBrillo(), []);
-  const suelo = useRef<THREE.Mesh>(null);
-  const { gl } = useThree();
-
-  const heroIdx = useMemo(() => ({ fila: movil ? 4 : 7, col: movil ? 13 : 21 }), [movil]);
-  const base = useMemo(() => {
-    const filas = movil ? 9 : 15;
-    const cols = movil ? 16 : 26;
-    return new THREE.Vector3((heroIdx.fila - (filas - 1) / 2) * 3.7, ALTO, (heroIdx.col - (cols - 1) / 2) * (PA + 0.06) - 4);
-  }, [heroIdx, movil]);
-
-  // Recorrido de la cámara (posición y punto al que mira), relativo al panel protagonista
-  const rutas = useMemo(() => {
-    const b = base;
-    const P = (x: number, y: number, z: number) => new THREE.Vector3(b.x + x, y, b.z + z);
-    const lejos = movil ? 1.35 : 1;
-    return {
-      pos: new THREE.CatmullRomCurve3([
-        P(6 * lejos, 13, 27 * lejos),
-        P(1, 5.5, 13),
-        P(-3.6, 4.6, 8.6),
-        P(-2.2, 4.4, 8.2),
-        P(9, 8, 14),
-        P(-4, 26, 34),
-      ]),
-      mira: new THREE.CatmullRomCurve3([
-        P(-6, 1.5, -18),
-        P(-2, 1.8, -6),
-        P(0.4, 3.0, 1.6),
-        P(0.5, 3.0, 1.6),
-        P(4, 1.5, -6),
-        P(26, 1, -30),
-      ]),
-    };
-  }, [base, movil]);
+function Fabrica({ energia }: { energia: () => number }) {
+  const lamina = useMemo(() => {
+    const t = texturaLamina();
+    t.repeat.set(10, 1.6);
+    return t;
+  }, []);
+  const lado = useMemo(() => {
+    const t = texturaLamina();
+    t.repeat.set(6, 1.6);
+    return t;
+  }, []);
+  const puerta = useMemo(() => {
+    const t = texturaLamina("#6c7581", "#525b66");
+    t.rotation = Math.PI / 2;
+    t.repeat.set(1, 6);
+    return t;
+  }, []);
+  const celdas = useMemo(() => texturaCeldas(true), []);
+  const ventanas = useRef<THREE.MeshStandardMaterial>(null);
+  const techoSolar = useRef<THREE.InstancedMesh>(null);
 
   useLayoutEffect(() => {
-    scene.fog = new THREE.Fog("#ff8a3d", 35, 170);
-    // Reflejos suaves para que el vidrio y el aluminio brillen
-    const pm = new THREE.PMREMGenerator(gl);
-    const env = pm.fromScene(new RoomEnvironment(), 0.04).texture;
-    scene.environment = env;
-    scene.environmentIntensity = 0.55;
-    return () => {
-      env.dispose();
-      pm.dispose();
+    const m = new THREE.Object3D();
+    let n = 0;
+    for (const lado of [-1, 1])
+      for (let i = 0; i < 12; i++)
+        for (let j = 0; j < 3; j++) {
+          // Sobre cada agua del techo (pendiente 0,12 rad desde la cumbrera)
+          const z = 1.4 + j * 1.9;
+          m.position.set(-10.2 + i * 1.86, 9.48 - z * 0.12, lado * z);
+          m.rotation.set(lado * 0.12, 0, 0);
+          m.updateMatrix();
+          techoSolar.current!.setMatrixAt(n++, m.matrix);
+        }
+    techoSolar.current!.instanceMatrix.needsUpdate = true;
+  }, []);
+
+  useFrame(() => {
+    ventanas.current!.emissiveIntensity = 0.3 + energia() * 2.4;
+  });
+
+  const blanco = <meshStandardMaterial color="#eef1f5" metalness={0.2} roughness={0.5} />;
+
+  return (
+    <group>
+      {/* Nave principal */}
+      <group position={[56, 0, -16]}>
+        <mesh position={[0, 0.5, 0]} receiveShadow>
+          <boxGeometry args={[24.4, 1, 14.4]} />
+          <meshStandardMaterial color="#9aa3ae" roughness={0.8} />
+        </mesh>
+        <mesh position={[0, 4.5, 0]} castShadow receiveShadow>
+          <boxGeometry args={[24, 8, 14]} />
+          <meshStandardMaterial attach="material-0" map={lado} roughness={0.55} metalness={0.2} />
+          <meshStandardMaterial attach="material-1" map={lado} roughness={0.55} metalness={0.2} />
+          <meshStandardMaterial attach="material-2" color="#8c97a6" />
+          <meshStandardMaterial attach="material-3" color="#8c97a6" />
+          <meshStandardMaterial attach="material-4" map={lamina} roughness={0.55} metalness={0.2} />
+          <meshStandardMaterial attach="material-5" map={lamina} roughness={0.55} metalness={0.2} />
+        </mesh>
+        {/* Techo a dos aguas */}
+        {[-1, 1].map((s) => (
+          <mesh key={s} position={[0, 8.9, s * 3.55]} rotation={[s * 0.12, 0, 0]} castShadow receiveShadow>
+            <boxGeometry args={[24.8, 0.25, 7.6]} />
+            <meshStandardMaterial color="#8792a1" metalness={0.55} roughness={0.45} />
+          </mesh>
+        ))}
+        <instancedMesh ref={techoSolar} args={[undefined, undefined, 72]} castShadow>
+          <boxGeometry args={[1.75, 0.05, 1.8]} />
+          <meshStandardMaterial map={celdas} metalness={0.45} roughness={0.2} />
+        </instancedMesh>
+        {/* Fachada: puertas de cargue, marquesina y franja de ventanas */}
+        {[-8, -3.5, 1, 5.5].map((x) => (
+          <mesh key={x} position={[x, 2.6, 7.06]}>
+            <boxGeometry args={[3.2, 4, 0.12]} />
+            <meshStandardMaterial map={puerta} roughness={0.6} metalness={0.3} />
+          </mesh>
+        ))}
+        <mesh position={[-1.25, 5.1, 8.3]} castShadow>
+          <boxGeometry args={[17, 0.22, 2.6]} />
+          <meshStandardMaterial color="#cdd4de" metalness={0.5} roughness={0.4} />
+        </mesh>
+        <mesh position={[0, 6.9, 7.06]}>
+          <boxGeometry args={[22, 0.9, 0.08]} />
+          <meshStandardMaterial ref={ventanas} color="#ffe2a0" emissive="#ffb347" emissiveIntensity={0.4} toneMapped={false} />
+        </mesh>
+        <mesh position={[9.5, 3.4, 7.08]}>
+          <boxGeometry args={[3.2, 1.1, 0.06]} />
+          <meshStandardMaterial color="#0d2b5e" metalness={0.3} roughness={0.4} />
+        </mesh>
+        <mesh position={[9.5, 3.4, 7.12]}>
+          <boxGeometry args={[2.6, 0.18, 0.02]} />
+          <meshStandardMaterial color="#f0a500" emissive="#f0a500" emissiveIntensity={1.2} toneMapped={false} />
+        </mesh>
+        {/* Equipos de aire en el techo */}
+        {[-6, 0, 6].map((x) => (
+          <mesh key={x} position={[x, 9.6, 0]} castShadow>
+            <boxGeometry args={[1.6, 0.9, 1.4]} />
+            {blanco}
+          </mesh>
+        ))}
+      </group>
+
+      {/* Oficinas de vidrio */}
+      <group position={[40.5, 0, -12]}>
+        <mesh position={[0, 3.6, 0]} castShadow receiveShadow>
+          <boxGeometry args={[6, 7.2, 6]} />
+          <meshStandardMaterial color="#25476e" metalness={0.9} roughness={0.08} />
+        </mesh>
+        {[1.8, 3.6, 5.4, 7.2].map((y) => (
+          <mesh key={y} position={[0, y, 0]}>
+            <boxGeometry args={[6.12, 0.2, 6.12]} />
+            {blanco}
+          </mesh>
+        ))}
+      </group>
+
+      {/* Silos */}
+      {[0, 4.4].map((dx) => (
+        <group key={dx} position={[71 + dx * 0.2, 0, -22 + dx]}>
+          <mesh position={[0, 5, 0]} castShadow receiveShadow>
+            <cylinderGeometry args={[1.9, 1.9, 10, 24]} />
+            <meshStandardMaterial color="#e3e7ec" metalness={0.6} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 10.8, 0]} castShadow>
+            <coneGeometry args={[1.95, 1.6, 24]} />
+            <meshStandardMaterial color="#cfd5dd" metalness={0.6} roughness={0.3} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Camiones en los muelles */}
+      {[-8, 1].map((x) => (
+        <group key={x} position={[56 + x, 0, -1.2]}>
+          <mesh position={[0, 2.1, 0]} castShadow>
+            <boxGeometry args={[2.5, 3, 8]} />
+            <meshStandardMaterial color="#f4f6f9" roughness={0.5} />
+          </mesh>
+          <mesh position={[0, 1.6, 5.1]} castShadow>
+            <boxGeometry args={[2.4, 2.4, 2.1]} />
+            <meshStandardMaterial color="#0d2b5e" metalness={0.4} roughness={0.35} />
+          </mesh>
+        </group>
+      ))}
+
+      {/* Parqueadero con techo solar */}
+      <group position={[64, 0, -2.5]}>
+        {[
+          [-4.5, -2],
+          [4.5, -2],
+          [-4.5, 2],
+          [4.5, 2],
+        ].map(([x, z], i) => (
+          <mesh key={i} position={[x, 1.5, z]} castShadow>
+            <cylinderGeometry args={[0.1, 0.1, 3, 8]} />
+            <meshStandardMaterial color="#9aa3ae" metalness={0.6} />
+          </mesh>
+        ))}
+        <mesh position={[0, 3.1, 0]} rotation={[0.08, 0, 0]} castShadow receiveShadow>
+          <boxGeometry args={[10.5, 0.12, 5.4]} />
+          <meshStandardMaterial map={celdas} metalness={0.45} roughness={0.2} />
+        </mesh>
+        {[
+          [-3, "#c62828"],
+          [0, "#eceff1"],
+          [3, "#37474f"],
+        ].map(([x, c]) => (
+          <mesh key={x as number} position={[x as number, 0.65, 0]} castShadow>
+            <boxGeometry args={[1.8, 1.1, 4]} />
+            <meshStandardMaterial color={c as string} metalness={0.6} roughness={0.3} />
+          </mesh>
+        ))}
+      </group>
+    </group>
+  );
+}
+
+/* ---------- Cámara y mundo ---------- */
+
+function Mundo({ progress, raton, listo, movil }: Props) {
+  const { camera } = useThree();
+  const entrada = useRef(0);
+  const tmp = useMemo(() => ({ v: new THREE.Vector3(), p: new THREE.Vector3(), t: new THREE.Vector3(), mira: new THREE.Vector3() }), []);
+  const base = useMemo(() => new THREE.Vector3(filaX(HEROE.fila), ALTO, colZ(HEROE.col)), []);
+  const centro = useMemo(() => new THREE.Vector3(14, 0, -6), []);
+  const energia = useMemo(() => () => 0.45 + 0.55 * tramo(progress.get(), 0.76, 0.88), [progress]);
+  const hora = useMemo(() => () => progress.get(), [progress]);
+
+  // Cables: de cada inversor a la troncal, la troncal hasta la estación y de ahí a la fábrica
+  const rutas = useMemo(() => {
+    const y = 0.14;
+    const V = (x: number, z: number) => new THREE.Vector3(x, y, z);
+    const zInv = colZ(COLS - 1) + 1.1;
+    const out: THREE.Vector3[][] = [];
+    for (let f = 0; f < FILAS; f++) out.push([V(filaX(f) + 0.9, zInv + 0.1), V(filaX(f) + 0.9, zInv + 0.9), V(filaX(f) + 1.6, 11.8)]);
+    out.push([V(filaX(0) + 1.6, 11.8), V(10, 11.8), V(30, 11.8), V(33.5, 9.5), V(34.5, 3.2)]);
+    out.push([V(38.3, -1), V(40, -3.5), V(43.5, -6.5), V(47, -8.7)]);
+    return out;
+  }, []);
+
+  const rutasCamara = useMemo(() => {
+    const b = base;
+    const P = (x: number, y: number, z: number) => new THREE.Vector3(b.x + x, y, b.z + z);
+    const k = movil ? 1.35 : 1;
+    return {
+      pos: new THREE.CatmullRomCurve3([P(6 * k, 13, 27 * k), P(1, 5.5, 13), P(-3.6, 4.6, 8.6), P(-2.2, 4.4, 8.2), P(9, 8, 15), P(18 * k, 34, 52 * k)]),
+      mira: new THREE.CatmullRomCurve3([P(-6, 1.5, -18), P(-2, 1.8, -6), P(0.4, 3.0, 1.6), P(0.5, 3.0, 1.6), P(6, 1.5, -6), P(36, 0, -16)]),
     };
-  }, [scene, gl]);
+  }, [base, movil]);
 
   useFrame(({ clock }, dt) => {
     const p = progress.get();
     if (listo) entrada.current = Math.min(1, entrada.current + dt / 2.6);
     const e = 1 - Math.pow(1 - entrada.current, 3);
-
-    // Cámara: recorrido + entrada desde lo alto + leve movimiento con el mouse y respiración
     const u = c01(p);
-    rutas.pos.getPoint(u, tmp.p);
-    rutas.mira.getPoint(u, tmp.t);
+    rutasCamara.pos.getPoint(u, tmp.p);
+    rutasCamara.mira.getPoint(u, tmp.t);
     tmp.v.set(tmp.p.x - 18, tmp.p.y + 22, tmp.p.z + 26);
     tmp.p.lerpVectors(tmp.v, tmp.p, e);
     const r = raton.current;
     const t = clock.elapsedTime;
     tmp.p.x += r.x * 1.2 + Math.sin(t * 0.25) * 0.4;
     tmp.p.y += -r.y * 0.6 + Math.sin(t * 0.33) * 0.15;
-    camera.position.lerp(tmp.p, 1 - Math.pow(0.0015, dt));
-    tmp.mira.lerp(tmp.t, 1 - Math.pow(0.0015, dt));
+    const f = 1 - Math.pow(0.0015, dt);
+    camera.position.lerp(tmp.p, f);
+    tmp.mira.lerp(tmp.t, f);
     camera.lookAt(tmp.mira);
-
-    // Cielo, sol, niebla y luces según la hora del día
-    solEn(p, tmp.v);
-    const m = cielo.current!;
-    colorEn(p, "arriba", m.uniforms.arriba.value);
-    colorEn(p, "horizonte", m.uniforms.horizonte.value);
-    colorEn(p, "sol", m.uniforms.solColor.value);
-    m.uniforms.solDir.value.copy(tmp.v).normalize();
-    sol.current!.position.copy(tmp.v).normalize().multiplyScalar(140);
-    sol.current!.material.color.copy(m.uniforms.solColor.value);
-    luz.current!.position.copy(tmp.v);
-    luz.current!.color.copy(m.uniforms.solColor.value);
-    const { a, b, t: k } = tramoPaleta(p);
-    const i = lerp(a.luz, b.luz, k);
-    luz.current!.intensity = i;
-    hemi.current!.intensity = 0.7 + i * 0.3;
-    // La niebla toma el color del horizonte para que el suelo se funda con el cielo
-    (scene.fog as THREE.Fog).color.copy(m.uniforms.horizonte.value);
-    colorEn(p, "suelo", (suelo.current!.material as THREE.MeshStandardMaterial).color);
   });
 
   return (
     <>
-      <mesh scale={400}>
-        <sphereGeometry args={[1, 32, 16]} />
-        <shaderMaterial
-          ref={cielo}
-          side={THREE.BackSide}
-          depthWrite={false}
-          fog={false}
-          vertexShader={cieloVert}
-          fragmentShader={cieloFrag}
-          uniforms={{
-            arriba: { value: new THREE.Color() },
-            horizonte: { value: new THREE.Color() },
-            solDir: { value: new THREE.Vector3(-1, 0.1, -0.5) },
-            solColor: { value: new THREE.Color() },
-          }}
-        />
-      </mesh>
-      <sprite ref={sol} scale={[38, 38, 1]}>
-        <spriteMaterial map={brillo} transparent depthWrite={false} fog={false} blending={THREE.AdditiveBlending} />
-      </sprite>
-      <hemisphereLight ref={hemi} args={["#bcd6ff", "#2a2a22", 0.6]} />
-      <directionalLight ref={luz} intensity={1.5} />
-
-      {/* Suelo */}
-      <mesh ref={suelo} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-        <planeGeometry args={[600, 600]} />
-        <meshStandardMaterial color="#3d4a3a" roughness={1} envMapIntensity={0} />
-      </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -4]}>
-        <planeGeometry args={[(movil ? 9 : 15) * 3.7 + 4, (movil ? 16 : 26) * 1.06 + 4]} />
-        <meshStandardMaterial color="#7a7564" roughness={1} transparent opacity={0.55} envMapIntensity={0} />
-      </mesh>
-
-      <Planta progress={progress} movil={movil} heroIdx={heroIdx} />
+      <Cielo hora={hora} centro={centro} sombra={60} calidad={movil ? 1024 : 2048} />
+      <Terreno zonas={zonas} caminos={caminos} seg={movil ? 140 : 220} />
+      <Arboles zonas={zonas} n={movil ? 60 : 120} rmin={55} rmax={170} />
+      <Planta progress={progress} />
       <PanelHeroe progress={progress} base={base} />
-      <Empresa progress={progress} />
+      <Cables rutas={rutas} nivel={energia} grosor={0.09} />
+      <Skid energia={energia} />
+      <Fabrica energia={energia} />
     </>
   );
 }
@@ -551,8 +548,9 @@ function Mundo({ progress, raton, listo, movil }: Props) {
 export default function EscenaSolar(props: Props) {
   return (
     <Canvas
+      shadows={props.movil ? true : "soft"}
       dpr={props.movil ? [1, 1.5] : [1, 1.75]}
-      camera={{ fov: props.movil ? 55 : 42, near: 0.1, far: 900, position: [-40, 30, 40] }}
+      camera={{ fov: props.movil ? 55 : 42, near: 0.1, far: 1500, position: [-40, 30, 40] }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
         gl.toneMapping = THREE.ACESFilmicToneMapping;
@@ -560,6 +558,12 @@ export default function EscenaSolar(props: Props) {
       }}
     >
       <Mundo {...props} />
+      {!props.movil && (
+        <EffectComposer multisampling={4}>
+          <Bloom mipmapBlur intensity={0.85} luminanceThreshold={0.9} luminanceSmoothing={0.25} />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+        </EffectComposer>
+      )}
     </Canvas>
   );
 }
