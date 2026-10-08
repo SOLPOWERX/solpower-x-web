@@ -813,13 +813,14 @@ function Mundo({ progress, raton, listo, movil }: Props) {
     const ramales: THREE.Vector3[][] = [];
     for (let f = 0; f < FILAS; f++) {
       const x = filaX(f) + INV_DX;
-      ramales.push([V(x, 0.62, INV_Z - 0.02), V(x, 0.3, INV_Z + 0.12), V(x, S, INV_Z + 0.5), V(x + 0.4, S, 11.3), V(x + 0.7, S, 11.8)]);
+      ramales.push([V(x, 0.62, INV_Z - 0.02), V(x, S, INV_Z - 0.02), V(x, S, 11.8)]);
     }
+    // Todo en ángulo recto, como va la canalización en obra
     const troncales = [
       // Planta → entra por la puerta de la subestación y sube al gabinete del inversor
-      [V(filaX(0) + 0.6, S, 11.8), V(10, S, 11.8), V(30, S, 11.8), V(33.6, S, 9.4), V(34, S, 6), V(33.8, S, 3.2), V(33.2, S, 1.6), V(33, 0.3, 0.85), V(33, 0.55, 0.42)],
+      [V(filaX(0) + INV_DX, S, 11.8), V(34.2, S, 11.8), V(34.2, S, 1.6), V(33, S, 1.6), V(33, S, 0.8), V(33, 0.55, 0.8), V(33, 0.55, 0.42)],
       // Transformador → sale por el costado, va enterrado y sube al tablero de la fábrica
-      [V(36.9, 0.6, 0.15), V(37.1, 0.25, 0.6), V(37.6, S, 1), V(39.2, S, 0.4), V(40.6, S, -1.6), V(43.5, S, -6.2), V(46.2, S, -7.3), V(47.3, 0.15, -7.9), V(47.5, 0.4, -8.22)],
+      [V(36.9, 0.6, 0.17), V(36.9, 0.6, 0.6), V(36.9, S, 0.6), V(43.5, S, 0.6), V(43.5, S, -7.6), V(47.5, S, -7.6), V(47.5, 0.3, -7.6), V(47.5, 0.3, -8.24)],
     ];
     return { ramales, troncales };
   }, []);
@@ -864,8 +865,8 @@ function Mundo({ progress, raton, listo, movil }: Props) {
       <Arboles zonas={zonas} n={movil ? 60 : 120} rmin={55} rmax={170} />
       <Planta progress={progress} />
       <PanelHeroe progress={progress} base={base} />
-      <Cables rutas={ramales} nivel={energia} grosor={0.03} fases={3} enterrado />
-      <Cables rutas={troncales} nivel={energia} grosor={0.07} fases={3} enterrado mojones />
+      <Cables rutas={ramales} nivel={energia} grosor={0.03} fases={3} enterrado recto />
+      <Cables rutas={troncales} nivel={energia} grosor={0.07} fases={3} enterrado mojones recto />
       <TableroFabrica energia={energia} />
       <Inversores movil={movil} energia={energia} />
       <Skid energia={energia} />

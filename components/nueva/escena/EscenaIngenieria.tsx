@@ -8,7 +8,7 @@ import { useLayoutEffect, useMemo, useRef, type MutableRefObject, type ReactNode
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
 import { Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
-import { Arboles, Cables, Cielo, Terreno, c01, texturaCeldas, texturaMalla, texturaRejilla, texturaSenal, tramo, type Momento, type Zona } from "./comun";
+import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, texturaCeldas, texturaMalla, texturaRejilla, texturaSenal, tramo, type Momento, type Zona } from "./comun";
 
 /*
  * Página Ingeniería: todo empieza como un plano técnico (líneas azules) y se vuelve real.
@@ -576,22 +576,39 @@ function Mundo({ progress, raton, movil }: Props) {
   }, []);
   const rutasSolar = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const dc = MESAS_Z.map((zc) => {
-      const [, y, z] = enMesa(zc, 0, 0.12, -0.06);
-      return [V(PANEL_X0 + (N_COL - 1) * (PAN_A + 0.02), y, z), V(PANEL_X0 - 0.2, y, z), V(PANEL_X0 - 0.75, 0.9, zc + 0.75), V(PANEL_X0 - 1.2, 0.6, zc + 0.78)];
-    });
-    const ac = MESAS_Z.map((zc, i) => [
-      V(PANEL_X0 - 1.2, 0.6, zc + 1.17),
-      V(PANEL_X0 - 1.25, 0.03, zc + 1.6),
-      V(10.9, 0.03, -0.4 + i * 0.2),
-      V(10.35, 0.4, -1.75 + i * 0.15),
-      V(10.18, 0.86, -1.75 + i * 0.15),
+    const XC = PANEL_X0 - 1.23; // entradas del inversor (bajo el equipo)
+    // Un tubo por cada fila de la mesa (un string por fila): baja por debajo de la estructura y entra al inversor
+    const dc = MESAS_Z.flatMap((zc) => [
+      [V(13.6, 0.68, zc + 1.26), V(12.2, 0.68, zc + 1.26), V(12.2, 0.4, zc + 1.26), V(12.2, 0.4, zc + 0.7125), V(XC, 0.4, zc + 0.7125), V(XC, 0.6, zc + 0.7125)],
+      [V(13.6, 1.0, zc - 0.4), V(12.35, 1.0, zc - 0.4), V(12.35, 0.3, zc - 0.4), V(12.35, 0.3, zc + 0.8125), V(XC, 0.3, zc + 0.8125), V(XC, 0.6, zc + 0.8125)],
     ]);
-    return { dc, ac };
+    // AC enterrado en ángulo recto hasta el tablero del cuarto de celdas (sin cruzarse)
+    const carril = [10.8, 10.95, 10.7];
+    const llegada = [-1.85, -1.6, -1.35];
+    const ac = MESAS_Z.map((zc, i) => [
+      V(XC, 0.6, zc + 1.06),
+      V(XC, 0.03, zc + 1.06),
+      V(carril[i], 0.03, zc + 1.06),
+      V(carril[i], 0.03, llegada[i]),
+      V(10.14, 0.03, llegada[i]),
+      V(10.14, 0.82, llegada[i]),
+    ]);
+    const tubos = [
+      ...MESAS_Z.map((zc) => [V(XC, 0.62, zc + 1.06), V(XC, -0.05, zc + 1.06)]),
+      ...llegada.map((z) => [V(10.14, -0.05, z), V(10.14, 0.86, z)]),
+    ];
+    return { dc, ac, tubos };
   }, []);
-  const rutasBT = useMemo(() => {
+  // Baja tensión: del transformador al cuarto de celdas, con su tubo por el costado del transformador
+  const { rutasBT, tubosBT } = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    return [[V(0.9, 3.9, 0), V(1.6, 2.4, 0.9), V(2.4, 0.03, 1.6), V(4.6, 0.03, 1.2), V(5.4, 0.4, 0.2), V(5.4, 0.8, 0)]];
+    return {
+      rutasBT: [[V(0.9, 3.85, 0), V(1.75, 3.85, 0), V(1.75, 0.03, 0), V(1.75, 0.03, 0.7), V(4.4, 0.03, 0.7), V(4.4, 0.03, 0.12), V(4.4, 1.0, 0.12), V(4.4, 1.0, -0.05)]],
+      tubosBT: [
+        [V(1.75, 3.6, 0), V(1.75, 0.38, 0)],
+        [V(4.4, -0.05, 0.12), V(4.4, 1.0, 0.12), V(4.4, 1.0, -0.06)],
+      ],
+    };
   }, []);
 
   const tiempos = [0, 0.2, 0.42, 0.6, 0.76, 0.9, 1];
@@ -652,9 +669,13 @@ function Mundo({ progress, raton, movil }: Props) {
       {conductores.map((c, i) => (
         <Cables key={i} rutas={[c]} nivel={lineaMT} grosor={0.035} fases={1} />
       ))}
-      <Cables rutas={rutasBT} nivel={bt} grosor={0.05} fases={3} enterrado />
-      <Cables rutas={rutasSolar.dc} nivel={bt} grosor={0.022} fases={2} />
-      <Cables rutas={rutasSolar.ac} nivel={bt} grosor={0.03} fases={3} enterrado />
+      <Cables rutas={rutasBT} nivel={bt} grosor={0.03} fases={3} enterrado recto />
+      <Cables rutas={rutasSolar.ac} nivel={bt} grosor={0.015} fases={3} enterrado recto />
+      <Plano progress={progress}>
+        <Tuberia rutas={rutasSolar.dc} radio={0.03} nivel={bt} cada={2} />
+        <Tuberia rutas={rutasSolar.tubos} radio={0.055} nivel={bt} />
+        <Tuberia rutas={tubosBT} radio={0.11} nivel={bt} />
+      </Plano>
       <TableroAC />
       <Cota progress={progress} pos={[0, 5.4, 0]} texto="Transformador 630 kVA · 13,2 kV / 440 V" />
       <Cota progress={progress} pos={[-7, 10, 0]} texto="Pórtico de llegada MT" />

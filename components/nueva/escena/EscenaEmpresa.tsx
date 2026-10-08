@@ -7,7 +7,7 @@ import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
 import { Bandeja, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
-import { Arboles, Cables, Cielo, Terreno, c01, type Momento, lerp, texturaCeldas, texturaLamina, texturaRejilla, tramo, type Zona } from "./comun";
+import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, paralela, type Momento, lerp, texturaCeldas, texturaLamina, texturaRejilla, tramo, type Zona } from "./comun";
 
 /*
  * Página Empresas: una bodega con el techo vacío.
@@ -205,32 +205,66 @@ function Bodega({ energia }: { energia: () => number }) {
   );
 }
 
-/* ---------- Pared lateral: bandejas, cuatro inversores y tablero general ---------- */
+/* ---------- Canalización: tubo por fila de paneles, bandeja en el techo, bajante, inversores y tablero ---------- */
 
 // Inversores en la pared x = W/2, mirando hacia +x
 const ZINV = [-6.5, -4.3, -2.1, 0.1];
 const YINV = 2.6;
 const ESC_INV = 1.7;
 const XP = W / 2; // cara de la pared
-const Y_DC = 4.45; // bandeja de llegada DC (arriba de los inversores)
-const Y_AC = 1.25; // bandeja de salida AC (abajo)
-const Z_BAJANTE = -8; // bajante vertical desde el techo
+const FILAS_Z = [7.3, 5.3, 3.3, 1.3, -1.3, -3.3, -5.3, -7.3]; // de la más lejana a la más cercana a la bajante
+const sobreTecho = (z: number) => techoY(z) + 0.151; // superficie de la cubierta
+const XT = 16.1; // bandeja del techo, a lo largo del borde este
+const yBandeja = (z: number) => sobreTecho(z) + 0.075;
+const yCableTecho = (z: number) => sobreTecho(z) + 0.056;
+const ZB = -8.4; // por aquí la bandeja sale del techo y baja por la pared
+const XB = 16.62; // bajante vertical (fuera del alero)
+const Y_DC = 4.45; // bandeja DC sobre los inversores
+const Y_CABLE_DC = Y_DC - 0.07;
+const Y_AC = 1.25; // bandeja AC bajo los inversores
+const Y_CABLE_AC = Y_AC - 0.064;
+const X_CON = XP + 0.36; // conexiones bajo los inversores
 const Z_TAB = 3.3; // tablero general
+const X_TAB = XP + 0.3;
+const bajadaDC = (i: number) => ZINV[i] + 0.75;
 
 function CuartoElectrico({ energia }: { energia: () => number }) {
   const m = useMaterialesEquipos();
   useLedsEquipos(m, energia);
+  const c = Math.cos(PEND);
+  const s = Math.sin(PEND);
+  const soportesTecho = [7, 5, 3, 1, -1, -3, -5, -7];
   return (
     <group>
-      {/* Bandejas portacables */}
-      <Bandeja m={m} desde={[XP + 0.33, Y_DC - 0.05, Z_BAJANTE - 0.3]} hasta={[XP + 0.33, Y_DC - 0.05, 0.9]} ancho={0.6} normal={[0, 1, 0]} />
-      <Bandeja m={m} desde={[XP + 0.05, Y_DC - 0.3, Z_BAJANTE]} hasta={[XP + 0.05, H + 0.4, Z_BAJANTE]} ancho={0.6} normal={[1, 0, 0]} />
-      <Bandeja m={m} desde={[XP + 0.33, Y_AC - 0.05, ZINV[0] - 0.6]} hasta={[XP + 0.33, Y_AC - 0.05, Z_TAB - 0.62]} ancho={0.6} normal={[0, 1, 0]} />
-      {/* Soportes de las bandejas */}
-      {[-7.5, -5.4, -3.2, -1, 0.8].map((z) => (
-        <mesh key={z} position={[XP + 0.33, Y_DC - 0.11, z]} material={m.galvanizado}>
-          <boxGeometry args={[0.66, 0.04, 0.04]} />
+      {/* Bandeja del techo (sigue las dos aguas), codo hacia el borde y bajante */}
+      <Bandeja m={m} desde={[XT, yBandeja(7.75), 7.75]} hasta={[XT, yBandeja(0), 0]} ancho={0.5} normal={[0, c, s]} />
+      <Bandeja m={m} desde={[XT, yBandeja(0), 0]} hasta={[XT, yBandeja(ZB - 0.3), ZB - 0.3]} ancho={0.5} normal={[0, c, -s]} />
+      <Bandeja m={m} desde={[XT - 0.25, yBandeja(ZB), ZB]} hasta={[XB + 0.06, yBandeja(ZB), ZB]} ancho={0.6} normal={[0, 1, 0]} />
+      <Bandeja m={m} desde={[XB, yBandeja(ZB) + 0.05, ZB]} hasta={[XB, Y_DC - 0.05, ZB]} ancho={0.6} normal={[1, 0, 0]} />
+      {soportesTecho.map((z) => (
+        <mesh key={z} position={[XT, sobreTecho(z) + 0.015, z]} rotation={[Math.sign(z) * PEND, 0, 0]} material={m.galvanizado}>
+          <boxGeometry args={[0.58, 0.04, 0.08]} />
         </mesh>
+      ))}
+      {[5.2, 6.6, 8].map((y) =>
+        [-0.24, 0.24].map((dz) => (
+          <mesh key={`${y}${dz}`} position={[(XP + XB - 0.04) / 2, y, ZB + dz]} material={m.galvanizado}>
+            <boxGeometry args={[XB - 0.04 - XP, 0.04, 0.04]} />
+          </mesh>
+        )),
+      )}
+      {/* Bandeja DC sobre los inversores y bandeja AC por debajo */}
+      <Bandeja m={m} desde={[XB - 0.02, Y_DC - 0.05, ZB - 0.3]} hasta={[XB - 0.02, Y_DC - 0.05, 1.2]} ancho={0.6} normal={[0, 1, 0]} />
+      <Bandeja m={m} desde={[XP + 0.33, Y_AC - 0.05, ZINV[0] - 0.6]} hasta={[XP + 0.33, Y_AC - 0.05, Z_TAB - 0.62]} ancho={0.6} normal={[0, 1, 0]} />
+      {[-8.1, -6.6, -4.4, -2.2, 0, 1.1].map((z) => (
+        <group key={z}>
+          <mesh position={[XP + 0.45, Y_DC - 0.11, z]} material={m.galvanizado}>
+            <boxGeometry args={[0.9, 0.04, 0.04]} />
+          </mesh>
+          <mesh position={[XP + 0.3, Y_DC - 0.42, z]} rotation={[0, 0, -0.78]} material={m.galvanizado}>
+            <boxGeometry args={[0.04, 0.82, 0.04]} />
+          </mesh>
+        </group>
       ))}
       {[-6.6, -4.4, -2.2, 0, 1.8].map((z) => (
         <mesh key={z} position={[XP + 0.33, Y_AC - 0.11, z]} material={m.galvanizado}>
@@ -240,12 +274,11 @@ function CuartoElectrico({ energia }: { energia: () => number }) {
       {ZINV.map((z) => (
         <Inversor key={z} m={m} position={[XP + 0.06 + 0.145 * ESC_INV, YINV, z]} rotation={[0, Math.PI / 2, 0]} escala={ESC_INV} />
       ))}
-      {/* Tablero general con medidor */}
-      <Tablero m={m} position={[XP + 0.14, 1.55, Z_TAB]} rotation={[0, Math.PI / 2, 0]} ancho={1.25} alto={1.7} medidor />
-      {/* Tubo que entra a la bodega desde el tablero */}
-      <mesh position={[XP + 0.14, 2.75, Z_TAB]} material={m.galvanizado}>
-        <cylinderGeometry args={[0.08, 0.08, 0.7, 10]} />
+      {/* Tablero general con medidor, sobre su base de montaje */}
+      <mesh position={[XP + 0.085, 1.6, Z_TAB]} material={m.galvanizado}>
+        <boxGeometry args={[0.17, 1.9, 1.35]} />
       </mesh>
+      <Tablero m={m} position={[X_TAB, 1.55, Z_TAB]} rotation={[0, Math.PI / 2, 0]} ancho={1.25} alto={1.7} medidor />
       {/* Placa de identificación de la cara de la pared */}
       <mesh position={[XP + 0.02, 5.2, -3.2]} rotation={[0, Math.PI / 2, 0]} material={m.oro}>
         <boxGeometry args={[3.2, 0.06, 0.01]} />
@@ -391,50 +424,63 @@ function Mundo({ progress, raton, movil }: Props) {
   const deRed = useMemo(() => () => 0.35 + 0.4 * red(progress.get(), reloj.current), [progress]);
   const hora = useMemo(() => () => progress.get(), [progress]);
 
-  const yr = techoY(4) + 0.42;
   const rutas = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const xs = [-12, -4, 4, 12]; // cada inversor recibe un grupo de paneles del techo
-    // DC: del techo → bajante vertical → bandeja de arriba → baja al lado del inversor → entra por abajo
-    const dc = ZINV.map((zi, i) => {
-      const zr = -4 - i * 0.22;
-      const xb = XP + 0.12 + i * 0.13;
-      const zb = Z_BAJANTE + (i - 1.5) * 0.13;
-      const zLado = zi + 0.62 * ESC_INV * 0.5 + 0.28;
-      return [
-        V(xs[i], yr, zr),
-        V(13.5, yr, zr),
-        V(15.2, techoY(7.4) + 0.42, -7.4),
-        V(XP + 0.12, H + 0.55, zb),
-        V(XP + 0.12, Y_DC + 0.4, zb),
-        V(xb, Y_DC, Z_BAJANTE + 0.5),
-        V(xb, Y_DC, zLado - 0.3),
-        V(XP + 0.42, Y_DC - 0.3, zLado),
-        V(XP + 0.42, YINV - 0.95, zLado),
-        V(XP + 0.32, YINV - 0.95, zi + 0.24),
-        V(XP + 0.3, YINV - 0.8, zi + 0.24),
+    // Un string por fila (16 paneles); cada inversor recibe dos strings
+    const tubosFila: THREE.Vector3[][] = [];
+    const dc: THREE.Vector3[][] = [];
+    FILAS_Z.forEach((zr, k) => {
+      const y = sobreTecho(zr) + 0.04;
+      // Tubo que sale de debajo de la fila y entra a la bandeja del techo
+      tubosFila.push([V(14.6, y, zr), V(XT - 0.25, y, zr)]);
+      const i = Math.floor(k / 2);
+      const zb = bajadaDC(i) + (k % 2 ? 0.018 : -0.018);
+      // Eje de la bandeja: techo → codo al borde → bajante → bandeja DC hasta el inversor
+      const eje = [
+        V(XT, yCableTecho(zr), zr),
+        ...(zr > 0 ? [V(XT, yCableTecho(0), 0)] : []),
+        V(XT, yCableTecho(ZB), ZB),
+        V(XB - 0.02, yCableTecho(ZB), ZB),
+        V(XB - 0.02, Y_CABLE_DC, ZB),
+        V(XB - 0.02, Y_CABLE_DC, zb),
       ];
+      // Cada string lleva su carril dentro de la bandeja (no se cruzan)
+      const carril = paralela(eje, 0.21 - k * 0.06);
+      dc.push([V(XT - 0.25, yCableTecho(zr), zr), ...carril, V(X_CON, Y_CABLE_DC, zb), V(X_CON, Y_DC - 0.25, zb)]);
     });
-    // AC: de cada inversor baja a la bandeja de abajo y va al tablero
+    // Tubo DC de la bandeja a las entradas del inversor y tubo AC del inversor a la bandeja de abajo
+    const tubosDC = ZINV.map((zi, i) => [
+      V(X_CON, Y_DC - 0.11, bajadaDC(i)),
+      V(X_CON, 1.52, bajadaDC(i)),
+      V(X_CON, 1.52, zi + 0.234),
+      V(X_CON, 1.76, zi + 0.234),
+    ]);
+    const tubosAC = ZINV.map((zi) => [V(XP + 0.32, 1.79, zi - 0.27), V(XP + 0.32, Y_AC + 0.0, zi - 0.27)]);
+    // AC: cada inversor con su carril en la bandeja de abajo hasta el costado del tablero
     const ac = ZINV.map((zi, i) => {
-      const xb = XP + 0.12 + i * 0.14;
-      return [
-        V(XP + 0.3, YINV - 0.8, zi - 0.27),
-        V(XP + 0.3, YINV - 1.0, zi - 0.27),
-        V(xb, Y_AC, zi - 0.1),
-        V(xb, Y_AC, Z_TAB - 0.9),
-        V(XP + 0.25, Y_AC + 0.05, Z_TAB - 0.64),
-      ];
+      const x = XP + 0.15 + i * 0.1;
+      return [V(XP + 0.32, Y_AC + 0.02, zi - 0.27), V(x, Y_CABLE_AC, zi - 0.27), V(x, Y_CABLE_AC, Z_TAB - 0.66)];
     });
     return {
+      tubosFila,
       dc,
+      tubosDC,
+      tubosAC,
       ac,
-      // Baterías → tablero (enterrado, sube por debajo del tablero)
-      bateria: [[V(21.5, 0.6, 7.2), V(20.5, 0.03, 6.6), V(18.4, 0.03, 4.8), V(XP + 0.5, 0.03, 3.6), V(XP + 0.16, 0.4, 3.1), V(XP + 0.14, 0.7, 3.1)]],
-      // Red del operador: transformador de poste en la vía → medidor y tablero
-      red: [[V(26, 0.03, 19.2), V(24, 0.03, 12), V(19, 0.03, 5.2), V(XP + 0.5, 0.03, 4), V(XP + 0.16, 0.4, 3.6), V(XP + 0.14, 0.7, 3.6)]],
+      // Tubos que suben del suelo al tablero, al contenedor de baterías, por el poste y hacia la bodega
+      acometidas: [
+        [V(X_TAB, -0.05, 3.1), V(X_TAB, 0.72, 3.1)],
+        [V(X_TAB, -0.05, 3.6), V(X_TAB, 0.72, 3.6)],
+        [V(21.45, -0.05, 7), V(21.45, 0.9, 7), V(21.72, 0.9, 7)],
+        [V(26.25, -0.05, 19.4), V(26.25, 5.5, 19.4)],
+        [V(X_TAB, 2.4, Z_TAB + 0.45), V(X_TAB, 3.0, Z_TAB + 0.45), V(XP - 0.05, 3.0, Z_TAB + 0.45)],
+      ],
+      // Baterías → tablero (enterrado, en ángulo recto)
+      bateria: [[V(21.45, 0.85, 7), V(21.45, 0.03, 7), V(17.6, 0.03, 7), V(17.6, 0.03, 3.6), V(X_TAB, 0.03, 3.6), V(X_TAB, 0.68, 3.6)]],
+      // Red del operador: transformador de poste en la vía → tablero con medidor
+      red: [[V(26.25, 0.6, 19.4), V(26.25, 0.03, 19.4), V(26.25, 0.03, 17.5), V(18.6, 0.03, 17.5), V(18.6, 0.03, 3.1), V(X_TAB, 0.03, 3.1), V(X_TAB, 0.68, 3.1)]],
     };
-  }, [yr]);
+  }, []);
 
   const tiempos = [0, 0.2, 0.4, 0.58, 0.76, 0.9, 1];
   const rutasCamara = useMemo(() => {
@@ -483,10 +529,14 @@ function Mundo({ progress, raton, movil }: Props) {
       <CuartoElectrico energia={energia} />
       <Baterias respaldo={respaldo} />
       <Barrio progress={progress} />
-      <Cables rutas={rutas.dc} nivel={energia} grosor={0.028} fases={2} />
-      <Cables rutas={rutas.ac} nivel={energia} grosor={0.028} fases={3} />
-      <Cables rutas={rutas.bateria} nivel={respaldo} grosor={0.06} fases={3} enterrado />
-      <Cables rutas={rutas.red} nivel={deRed} grosor={0.06} fases={3} enterrado mojones />
+      <Cables rutas={rutas.dc} nivel={energia} grosor={0.014} fases={2} recto />
+      <Cables rutas={rutas.ac} nivel={energia} grosor={0.016} fases={3} recto />
+      <Tuberia rutas={rutas.tubosFila} radio={0.03} nivel={energia} />
+      <Tuberia rutas={rutas.tubosDC} radio={0.05} nivel={energia} />
+      <Tuberia rutas={rutas.tubosAC} radio={0.045} nivel={energia} />
+      <Tuberia rutas={rutas.acometidas} radio={0.1} nivel={deRed} />
+      <Cables rutas={rutas.bateria} nivel={respaldo} grosor={0.03} fases={3} enterrado recto />
+      <Cables rutas={rutas.red} nivel={deRed} grosor={0.03} fases={3} enterrado mojones recto />
       {/* Transformador de poste del operador de red */}
       <group position={[26, 0, 19.4]}>
         <mesh position={[0, 4.5, 0]} castShadow>

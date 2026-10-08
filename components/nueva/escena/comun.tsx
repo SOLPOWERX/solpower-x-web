@@ -390,7 +390,7 @@ void main() {
   gl_FragColor = vec4(col, 1.0);
 }`;
 
-/** Desplaza una ruta hacia un lado (para armar el grupo de fases en paralelo). */
+/** Desplaza una ruta curva hacia un lado (para armar el grupo de fases en paralelo). */
 function desplazar(curva: THREE.Curve<THREE.Vector3>, lado: number, alto: number, n: number) {
   const out: THREE.Vector3[] = [];
   const tg = new THREE.Vector3();
@@ -405,8 +405,59 @@ function desplazar(curva: THREE.Curve<THREE.Vector3>, lado: number, alto: number
 }
 
 /**
- * Cables: cada ruta lleva `fases` cables redondos en paralelo. Si `enterrado`, los tramos a ras de suelo
- * quedan medio hundidos sobre una franja de tierra removida, con mojones de señalización.
+ * Ruta de tubería o bandeja: tramos rectos unidos por curvas cortas de radio `radio` en cada quiebre.
+ * Los puntos se escriben en ángulo recto (giros a 90°), como se instala en obra.
+ */
+export function rutaRecta(pts: THREE.Vector3[], radio = 0.15) {
+  const limpios = pts.filter((p, i) => i === 0 || p.distanceToSquared(pts[i - 1]) > 1e-8);
+  const camino = new THREE.CurvePath<THREE.Vector3>();
+  let prev = limpios[0].clone();
+  for (let i = 1; i < limpios.length - 1; i++) {
+    const a = limpios[i - 1];
+    const p = limpios[i];
+    const b = limpios[i + 1];
+    const r = Math.min(radio, p.distanceTo(a) * 0.45, p.distanceTo(b) * 0.45);
+    const entra = p.clone().addScaledVector(a.clone().sub(p).normalize(), r);
+    const sale = p.clone().addScaledVector(b.clone().sub(p).normalize(), r);
+    if (prev.distanceToSquared(entra) > 1e-8) camino.add(new THREE.LineCurve3(prev, entra));
+    camino.add(new THREE.QuadraticBezierCurve3(entra, p.clone(), sale));
+    prev = sale;
+  }
+  camino.add(new THREE.LineCurve3(prev, limpios[limpios.length - 1].clone()));
+  return camino;
+}
+
+/** Lado de un tramo (horizontal y perpendicular a él); en tramos verticales se hereda el del tramo vecino. */
+function lados(pts: THREE.Vector3[]) {
+  const out: (THREE.Vector3 | null)[] = [];
+  for (let i = 0; i < pts.length - 1; i++) {
+    const d = pts[i + 1].clone().sub(pts[i]).normalize();
+    out.push(Math.abs(d.y) < 0.7 ? new THREE.Vector3(-d.z, 0, d.x).normalize() : null);
+  }
+  let ult = out.find((l) => l) ?? new THREE.Vector3(1, 0, 0);
+  for (let i = 0; i < out.length; i++) {
+    if (out[i]) ult = out[i]!;
+    else out[i] = ult.clone();
+  }
+  return out as THREE.Vector3[];
+}
+
+/** Copia de una ruta en ángulo recto corrida `lado` metros hacia su costado (carriles dentro de una bandeja). */
+export function paralela(pts: THREE.Vector3[], lado: number, alto = 0) {
+  if (pts.length < 2) return pts.map((p) => p.clone());
+  const l = lados(pts);
+  return pts.map((p, i) => {
+    const la = l[Math.max(0, i - 1)];
+    const lb = l[Math.min(l.length - 1, i)];
+    const m = la.clone().add(lb).divideScalar(Math.max(0.3, 1 + la.dot(lb)));
+    return p.clone().addScaledVector(m, lado).setY(p.y + alto);
+  });
+}
+
+/**
+ * Cables: cada ruta lleva `fases` cables redondos en paralelo. Con `recto` la ruta va en ángulo recto
+ * (bandeja o tubería); sin él, sigue una curva libre (conductores aéreos, cable de carga).
+ * Si `enterrado`, los tramos a ras de suelo quedan sobre una franja de tierra removida, con mojones de señalización.
  * La luz corre en olas; `nivel` da la intensidad (0 a 1).
  */
 export function Cables({
@@ -415,6 +466,7 @@ export function Cables({
   fases = 3,
   enterrado = false,
   mojones = false,
+  recto = false,
   nivel,
 }: {
   rutas: THREE.Vector3[][];
@@ -422,6 +474,7 @@ export function Cables({
   fases?: number;
   enterrado?: boolean;
   mojones?: boolean;
+  recto?: boolean;
   nivel: () => number;
 }) {
   const mats = useRef<THREE.ShaderMaterial[]>([]);
@@ -431,16 +484,20 @@ export function Cables({
 
   const { tubos, tramos, marcas } = useMemo(() => {
     const tubos: { geo: THREE.TubeGeometry; largo: number; fase: number }[] = [];
-    const tramos: { p: THREE.Vector3; ang: number; largo: number }[] = [];
+    const tramos: { p: THREE.Vector3; ang: number; largo: number; ancho?: number }[] = [];
     const marcas: THREE.Vector3[] = [];
-    for (const pts of rutas) {
-      const base = new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.05);
+    const radio = Math.max(0.08, grosor * 5);
+    const radial = grosor < 0.03 ? 6 : 10;
+    rutas.forEach((pts, ri) => {
+      const base = recto ? rutaRecta(pts, radio + grosor * fases) : new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0.05);
       const largo = base.getLength();
       const n = Math.max(8, Math.round(largo * 2));
       for (let f = 0; f < fases; f++) {
         const lado = (f - (fases - 1) / 2) * grosor * 2.3;
-        const c = desplazar(base, lado, f % 2 === 0 ? 0 : grosor * 0.2, n);
-        tubos.push({ geo: new THREE.TubeGeometry(c, n * 2, grosor, 10, false), largo, fase: f % 3 });
+        const alto = f % 2 === 0 ? 0 : grosor * 0.2;
+        const c = recto ? rutaRecta(paralela(pts, lado, alto), radio + grosor * fases) : desplazar(base, lado, alto, n);
+        const segs = recto ? Math.min(2400, Math.ceil(largo / 0.05)) : n * 2;
+        tubos.push({ geo: new THREE.TubeGeometry(c, segs, grosor, radial, false), largo, fase: f % 3 });
       }
       if (enterrado) {
         const k = Math.max(1, Math.round(largo / 0.8));
@@ -450,8 +507,14 @@ export function Cables({
           const p = base.getPointAt(u);
           if (p.y > 0.2) continue; // solo donde el cable va por el suelo
           base.getTangentAt(u, tg);
+          p.y = ri;
           tramos.push({ p, ang: Math.atan2(tg.x, tg.z), largo: largo / k + 0.06 });
         }
+        // Esquinas de la zanja en cada quiebre
+        if (recto)
+          pts.forEach((q) => {
+            if (q.y < 0.2) tramos.push({ p: new THREE.Vector3(q.x, ri, q.z), ang: 0, largo: 0, ancho: 1 });
+          });
       }
       if (mojones) {
         const cada = 9;
@@ -465,18 +528,19 @@ export function Cables({
           marcas.push(p.clone().addScaledVector(s, fases * grosor * 1.6 + 0.45));
         }
       }
-    }
+    });
     return { tubos, tramos, marcas };
-  }, [rutas, grosor, fases, enterrado, mojones]);
+  }, [rutas, grosor, fases, enterrado, mojones, recto]);
 
   useLayoutEffect(() => {
     const m = new THREE.Object3D();
     const ancho = fases * grosor * 2.3 + 0.45;
     if (tierra.current) {
       tramos.forEach((s, i) => {
-        m.position.set(s.p.x, 0.03, s.p.z);
+        // Cada ruta un poco más alta que la anterior para que las zanjas vecinas no parpadeen
+        m.position.set(s.p.x, 0.03 + (s.p.y % 5) * 0.002 + grosor * 0.05, s.p.z);
         m.rotation.set(0, s.ang, 0);
-        m.scale.set(ancho, 1, s.largo);
+        m.scale.set(ancho, 1, s.ancho ? ancho : s.largo);
         m.updateMatrix();
         tierra.current!.setMatrixAt(i, m.matrix);
       });
@@ -538,6 +602,109 @@ export function Cables({
           </instancedMesh>
         </>
       )}
+    </group>
+  );
+}
+
+/**
+ * Tubería conduit metálica en ángulo recto, con uniones cada pocos metros y en cada codo.
+ * Por dentro van los cables: cuando hay energía, una ola de luz dorada recorre el tubo.
+ */
+export function Tuberia({
+  rutas,
+  radio = 0.035,
+  nivel,
+  color = "#b4bcc6",
+  cada = 2.5,
+}: {
+  rutas: THREE.Vector3[][];
+  radio?: number;
+  nivel: () => number;
+  color?: string;
+  cada?: number;
+}) {
+  const uniformes = useMemo(() => ({ t: { value: 0 }, k: { value: 0 } }), []);
+  const material = useMemo(() => {
+    const m = new THREE.MeshStandardMaterial({ color, metalness: 0.6, roughness: 0.34 });
+    m.defines = { USE_UV: "" };
+    m.onBeforeCompile = (s) => {
+      s.uniforms.t = uniformes.t;
+      s.uniforms.k = uniformes.k;
+      s.fragmentShader = s.fragmentShader
+        .replace("#include <common>", "#include <common>\nuniform float t;\nuniform float k;")
+        .replace(
+          "#include <emissivemap_fragment>",
+          `#include <emissivemap_fragment>
+  float w = fract(vUv.x * 0.12 - t * 0.9);
+  float ola = smoothstep(0.0, 0.08, w) * (1.0 - smoothstep(0.08, 0.45, w));
+  totalEmissiveRadiance += vec3(1.0, 0.7, 0.16) * (0.04 + ola * 0.9) * k;`,
+        );
+    };
+    return m;
+  }, [color, uniformes]);
+  const uniones = useRef<THREE.InstancedMesh>(null);
+
+  const { geos, juntas } = useMemo(() => {
+    const geos: THREE.TubeGeometry[] = [];
+    const juntas: { p: THREE.Vector3; d: THREE.Vector3; e: number }[] = [];
+    const curva = radio * 5;
+    for (const pts of rutas) {
+      const c = rutaRecta(pts, curva);
+      const largo = c.getLength();
+      const g = new THREE.TubeGeometry(c, Math.min(2400, Math.ceil(largo / 0.04) + pts.length * 6), radio, 10, false);
+      // uv.x en metros: la ola corre igual de rápido en tubos cortos y largos
+      const uv = g.attributes.uv as THREE.BufferAttribute;
+      for (let i = 0; i < uv.count; i++) uv.setX(i, uv.getX(i) * largo);
+      geos.push(g);
+      // Uniones: en los extremos, a la salida de cada codo y cada `cada` metros en los tramos rectos
+      for (let i = 0; i < pts.length - 1; i++) {
+        const a = pts[i];
+        const b = pts[i + 1];
+        const L = a.distanceTo(b);
+        if (L < 1e-4) continue;
+        const d = b.clone().sub(a).normalize();
+        const r0 = i === 0 ? 0 : Math.min(curva, L * 0.45);
+        const r1 = i === pts.length - 2 ? 0 : Math.min(curva, L * 0.45);
+        const ext = (u: number, e: number) => juntas.push({ p: a.clone().addScaledVector(d, u), d, e });
+        ext(r0 + radio * 0.6, i === 0 ? 1.35 : 1.2);
+        ext(L - r1 - radio * 0.6, i === pts.length - 2 ? 1.35 : 1.2);
+        const n = Math.floor((L - r0 - r1) / cada);
+        for (let k = 1; k <= n; k++) {
+          const u = r0 + ((L - r0 - r1) * k) / (n + 1);
+          ext(u, 1.2);
+        }
+      }
+    }
+    return { geos, juntas };
+  }, [rutas, radio, cada]);
+
+  useLayoutEffect(() => {
+    const o = new THREE.Object3D();
+    const arriba = new THREE.Vector3(0, 1, 0);
+    juntas.forEach((j, i) => {
+      o.position.copy(j.p);
+      o.quaternion.setFromUnitVectors(arriba, j.d);
+      o.scale.set(j.e, 1, j.e);
+      o.updateMatrix();
+      uniones.current!.setMatrixAt(i, o.matrix);
+    });
+    uniones.current!.instanceMatrix.needsUpdate = true;
+  }, [juntas]);
+
+  useFrame(({ clock }) => {
+    uniformes.t.value = clock.elapsedTime;
+    uniformes.k.value = nivel();
+  });
+
+  return (
+    <group>
+      {geos.map((g, i) => (
+        <mesh key={i} geometry={g} material={material} castShadow receiveShadow />
+      ))}
+      <instancedMesh ref={uniones} args={[undefined, undefined, juntas.length]} castShadow frustumCulled={false}>
+        <cylinderGeometry args={[radio, radio, radio * 1.8, 12]} />
+        <meshStandardMaterial color="#d3d9e1" metalness={0.7} roughness={0.28} />
+      </instancedMesh>
     </group>
   );
 }

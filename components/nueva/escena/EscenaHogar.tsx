@@ -7,8 +7,8 @@ import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
 import type { MotionValue } from "framer-motion";
-import { Abrazaderas, Bateria, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
-import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, tramo, type Momento, type Zona } from "./comun";
+import { Bateria, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
+import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, lerp, texturaCeldas, tramo, type Momento, type Zona } from "./comun";
 
 /*
  * Página Hogares: una casa moderna con el techo vacío.
@@ -258,32 +258,7 @@ function Equipos({ progress, energia }: { progress: MotionValue<number>; energia
           <cylinderGeometry args={[0.04, 0.04, 0.06, 10]} />
         </mesh>
       </group>
-      {/* Carro eléctrico */}
-      <group position={[W / 2 + 3.2, 0, 8]}>
-        <RoundedBox args={[2, 0.9, 4.3]} radius={0.3} smoothness={4} position={[0, 0.75, 0]} castShadow>
-          <meshStandardMaterial color="#e7ecf2" metalness={0.7} roughness={0.25} />
-        </RoundedBox>
-        <RoundedBox args={[1.7, 0.65, 2.3]} radius={0.28} smoothness={4} position={[0, 1.45, -0.2]} castShadow>
-          <meshStandardMaterial color="#1c2633" metalness={0.8} roughness={0.1} />
-        </RoundedBox>
-        {[
-          [-0.95, -1.35],
-          [0.95, -1.35],
-          [-0.95, 1.35],
-          [0.95, 1.35],
-        ].map(([wx, wz], i) => (
-          <mesh key={i} position={[wx, 0.36, wz]} rotation={[0, 0, Math.PI / 2]} castShadow>
-            <cylinderGeometry args={[0.36, 0.36, 0.26, 18]} />
-            <meshStandardMaterial color="#15181d" roughness={0.6} />
-          </mesh>
-        ))}
-        {[-0.7, 0.7].map((x) => (
-          <mesh key={x} position={[x, 0.85, 2.16]}>
-            <boxGeometry args={[0.4, 0.12, 0.02]} />
-            <meshStandardMaterial color="#fff6dc" emissive="#fff0c8" emissiveIntensity={0.6} toneMapped={false} />
-          </mesh>
-        ))}
-      </group>
+      <Carro position={[W / 2 + 3.2, 0, 8]} puerto={cargador} />
     </group>
   );
 }
@@ -384,6 +359,135 @@ function CasaDetalles({ progress }: { progress: MotionValue<number> }) {
   );
 }
 
+/* ---------- Carro eléctrico (sedán): carrocería perfilada, cabina de vidrio, rines, luces LED y puerto de carga ---------- */
+
+function Carro({ position, puerto }: { position: [number, number, number]; puerto: THREE.Material }) {
+  const { cuerpo, cabina } = useMemo(() => {
+    // Perfil lateral: largo en x (frente en +x), alto en y, con los pasos de rueda recortados
+    const p = new THREE.Shape();
+    p.moveTo(-2.3, 0.3);
+    p.lineTo(-1.86, 0.3);
+    p.absarc(-1.45, 0.36, 0.41, Math.PI, 0, true);
+    p.lineTo(1.04, 0.3);
+    p.absarc(1.45, 0.36, 0.41, Math.PI, 0, true);
+    p.lineTo(2.24, 0.3);
+    p.quadraticCurveTo(2.42, 0.32, 2.42, 0.5);
+    p.lineTo(2.37, 0.63);
+    p.quadraticCurveTo(2.32, 0.69, 2.16, 0.71);
+    p.quadraticCurveTo(1.35, 0.83, 0.62, 0.97);
+    p.lineTo(-1.9, 1.0);
+    p.quadraticCurveTo(-2.28, 0.98, -2.34, 0.8);
+    p.quadraticCurveTo(-2.4, 0.5, -2.3, 0.3);
+    const cuerpo = new THREE.ExtrudeGeometry(p, { depth: 1.78, bevelEnabled: true, bevelThickness: 0.07, bevelSize: 0.06, bevelSegments: 5, curveSegments: 28 });
+    cuerpo.translate(0, 0, -0.89);
+    const c = new THREE.Shape();
+    c.moveTo(0.72, 0.95);
+    c.quadraticCurveTo(0.12, 1.31, -0.36, 1.41);
+    c.lineTo(-1.12, 1.41);
+    c.quadraticCurveTo(-1.78, 1.35, -2.06, 0.98);
+    c.lineTo(0.72, 0.95);
+    const cabina = new THREE.ExtrudeGeometry(c, { depth: 1.46, bevelEnabled: true, bevelThickness: 0.08, bevelSize: 0.06, bevelSegments: 5, curveSegments: 24 });
+    cabina.translate(0, 0, -0.73);
+    return { cuerpo, cabina };
+  }, []);
+  const mats = useMemo(
+    () => ({
+      pintura: new THREE.MeshPhysicalMaterial({ color: "#e9edf2", metalness: 0.5, roughness: 0.24, clearcoat: 1, clearcoatRoughness: 0.08 }),
+      vidrio: new THREE.MeshPhysicalMaterial({ color: "#0d131b", metalness: 0.85, roughness: 0.05, clearcoat: 1 }),
+      negro: new THREE.MeshStandardMaterial({ color: "#14171c", metalness: 0.3, roughness: 0.5 }),
+      llanta: new THREE.MeshStandardMaterial({ color: "#16181c", roughness: 0.85 }),
+      rin: new THREE.MeshStandardMaterial({ color: "#8e97a3", metalness: 0.85, roughness: 0.25 }),
+      faro: new THREE.MeshStandardMaterial({ color: "#fff6dc", emissive: "#fff0c8", emissiveIntensity: 0.9, toneMapped: false }),
+      stop: new THREE.MeshStandardMaterial({ color: "#ff2a2a", emissive: "#ff1a1a", emissiveIntensity: 0.7, toneMapped: false }),
+    }),
+    [],
+  );
+  const ruedas: [number, number][] = [
+    [-1, -1.45],
+    [1, -1.45],
+    [-1, 1.45],
+    [1, 1.45],
+  ];
+  return (
+    <group position={position}>
+      {/* Sombra bajo el carro */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.045, 0]}>
+        <planeGeometry args={[2.1, 4.7]} />
+        <meshBasicMaterial color="#000" transparent opacity={0.35} depthWrite={false} />
+      </mesh>
+      <group rotation={[0, -Math.PI / 2, 0]}>
+        <mesh geometry={cuerpo} material={mats.pintura} castShadow receiveShadow />
+        <mesh geometry={cabina} material={mats.vidrio} castShadow />
+      </group>
+      {/* Faldones y parachoques oscuros */}
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.93, 0.33, 0]} material={mats.negro}>
+          <boxGeometry args={[0.06, 0.07, 2.0]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.4, 2.45]} material={mats.negro}>
+        <boxGeometry args={[1.1, 0.1, 0.04]} />
+      </mesh>
+      {/* Luces: barra LED delantera, faros y barra trasera */}
+      <mesh position={[0, 0.69, 2.35]} rotation={[-0.5, 0, 0]} material={mats.faro}>
+        <boxGeometry args={[1.5, 0.022, 0.03]} />
+      </mesh>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * 0.6, 0.62, 2.45]} rotation={[-0.3, s * 0.12, 0]} material={mats.faro}>
+          <boxGeometry args={[0.46, 0.055, 0.03]} />
+        </mesh>
+      ))}
+      <mesh position={[0, 0.88, -2.35]} material={mats.stop}>
+        <boxGeometry args={[1.65, 0.05, 0.04]} />
+      </mesh>
+      {/* Espejos, manijas y líneas de las puertas */}
+      {[-1, 1].map((s) => (
+        <group key={s}>
+          <mesh position={[s * 1.03, 1.02, 0.55]} material={mats.pintura} castShadow>
+            <boxGeometry args={[0.18, 0.1, 0.13]} />
+          </mesh>
+          {[0.15, -0.95].map((z) => (
+            <mesh key={z} position={[s * 0.966, 0.86, z]} material={mats.negro}>
+              <boxGeometry args={[0.012, 0.03, 0.22]} />
+            </mesh>
+          ))}
+          {[0.62, -0.42, -1.48].map((z) => (
+            <mesh key={z} position={[s * 0.963, 0.66, z]} material={mats.negro}>
+              <boxGeometry args={[0.008, 0.6, 0.008]} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+      {/* Puerto de carga abierto (lado izquierdo, atrás) */}
+      <mesh position={[-0.965, 0.82, -1.72]} material={mats.negro}>
+        <boxGeometry args={[0.012, 0.13, 0.15]} />
+      </mesh>
+      <mesh position={[-0.972, 0.82, -1.72]} material={puerto}>
+        <boxGeometry args={[0.006, 0.05, 0.08]} />
+      </mesh>
+      {/* Ruedas con rines de cinco radios */}
+      {ruedas.map(([s, z], i) => (
+        <group key={i} position={[s * 0.82, 0.36, z]}>
+          <mesh rotation={[0, 0, Math.PI / 2]} material={mats.llanta} castShadow>
+            <cylinderGeometry args={[0.36, 0.36, 0.26, 28]} />
+          </mesh>
+          <mesh position={[s * 0.131, 0, 0]} rotation={[0, 0, Math.PI / 2]} material={mats.negro}>
+            <cylinderGeometry args={[0.25, 0.25, 0.012, 28]} />
+          </mesh>
+          {[0, 1, 2, 3, 4].map((k) => (
+            <mesh key={k} position={[s * 0.14, 0, 0]} rotation={[(k * Math.PI * 2) / 5, 0, 0]} material={mats.rin}>
+              <boxGeometry args={[0.012, 0.36, 0.05]} />
+            </mesh>
+          ))}
+          <mesh position={[s * 0.142, 0, 0]} rotation={[0, 0, Math.PI / 2]} material={mats.rin}>
+            <cylinderGeometry args={[0.06, 0.06, 0.02, 16]} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
 /* ---------- Barrio: calle, postes y casas vecinas que se apagan ---------- */
 
 function Barrio({ progress }: { progress: MotionValue<number> }) {
@@ -476,39 +580,53 @@ function Mundo({ progress, raton, movil }: Props) {
   const carro = useMemo(() => () => tramo(progress.get(), 0.6, 0.66) * (1 - tramo(progress.get(), 0.84, 0.9)), [progress]);
   const deRed = useMemo(() => () => 0.3 + 0.4 * red(progress.get(), reloj.current), [progress]);
   const hora = useMemo(() => () => progress.get(), [progress]);
-  const matsClips = useMaterialesEquipos();
 
   const rutas = useMemo(() => {
     const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
-    const xc = XG + 0.12; // cables pegados a la pared del garaje
-    // DC: del techo baja por la pared de la casa, cruza el techo del garaje y entra por abajo al inversor
-    const dc = [
-      V(3.4, techoY(3.6) + 0.34, 3.6),
-      V(5.8, techoY(3.9) + 0.32, 3.9),
-      V(W / 2 + 0.12, H - 0.1, 4.0),
-      V(W / 2 + 0.12, 3.85, 4.0),
-      V(W / 2 + 0.6, 3.66, 3.9),
-      V(XG - 0.3, 3.66, 3.9),
-      V(xc, 3.45, 3.6),
-      V(xc, 3.0, Z_INV + 0.9),
-      V(xc, 2.6, Z_INV + 0.6),
-      V(xc, 1.3, Z_INV + 0.6),
-      V(xc + 0.1, 1.3, Z_INV + 0.2),
-      V(XG + 0.2, 1.42, Z_INV + 0.15),
-    ];
-    // Inversor ↔ batería
-    const bat = [V(XG + 0.2, 1.42, Z_INV + 0.08), V(xc + 0.04, 1.15, Z_INV + 0.45), V(xc + 0.04, 1.15, Z_BAT - 0.55), V(XG + 0.16, 1.48, Z_BAT - 0.42)];
-    // Inversor → tablero (AC)
-    const ac = [V(XG + 0.2, 1.42, Z_INV - 0.06), V(xc + 0.04, 1.1, Z_INV - 0.3), V(xc + 0.04, 0.7, Z_TAB + 0.6), V(XG + 0.14, 0.82, Z_TAB + 0.15)];
+    const xc = XG + 0.16; // tubos separados de la pared del garaje con sus uniones
+    /**
+     * Tubo de una fila de paneles: sale por debajo del último panel, va por el techo hasta el borde,
+     * pasa por fuera del alero (sin atravesar el techo), baja por la pared, cruza el techo del garaje
+     * y baja hasta las entradas DC del inversor. Siempre en ángulo recto.
+     */
+    const tuboFila = (zr: number, zb: number, zc: number, yb: number, xGiro: number) => {
+      const y = techoY(zr) + 0.152;
+      return [
+        V(3.7, y, zr),
+        V(6.55, y, zr),
+        V(6.55, y - 0.5, zr),
+        V(6.1, y - 0.5, zr),
+        V(6.1, 3.65, zr),
+        V(xGiro, 3.65, zr),
+        V(xGiro, 3.65, zb),
+        V(12.75, 3.65, zb),
+        V(12.75, 3.22, zb),
+        V(xc, 3.22, zb),
+        V(xc, yb, zb),
+        V(xc, yb, zc),
+        V(xc, 1.4, zc),
+      ];
+    };
     return {
-      dc: [dc],
-      bat: [bat],
-      ac: [ac],
-      abrazaderas: [dc.slice(2, 4), dc.slice(6, 10), [bat[1], bat[2]], [ac[1], ac[2]]],
-      // Cargador → carro
-      carro: [[V(W / 2 + 1.02, 1.08, 4.69), V(W / 2 + 1.4, 0.15, 5.4), V(W / 2 + 2.2, 0.15, 6.4), V(W / 2 + 2.2, 0.9, 6.7)]],
-      // Acometida de la red desde el poste de la calle hasta el medidor
-      red: [[V(W / 2 + 6, 0.03, 16), V(W / 2 + 6.6, 0.03, 8), V(XG + 0.5, 0.03, 0), V(XG + 0.18, 0.5, Z_TAB - 0.15), V(XG + 0.14, 0.82, Z_TAB - 0.15)]],
+      // Fila de arriba: el tubo va por el espacio entre las dos filas; fila de abajo: bajo sus paneles
+      filas: [tuboFila(2.0, 0.72, Z_INV + 0.1875, 1.2, 11.7), tuboFila(2.85, 0.86, Z_INV + 0.0875, 1.1, 12.0)],
+      equipos: [
+        // Inversor → batería
+        [V(xc, 1.43, Z_INV - 0.06), V(xc, 0.95, Z_INV - 0.06), V(xc, 0.95, 1.1), V(xc, 1.5, 1.1), V(xc, 1.5, 1.22)],
+        // Inversor → tablero (AC)
+        [V(12.6, 1.43, Z_INV - 0.16), V(12.6, 0.65, Z_INV - 0.16), V(12.6, 0.65, Z_TAB + 0.1), V(12.6, 0.85, Z_TAB + 0.1)],
+      ],
+      // Tablero → cargador del carro, por la pared y el frente del garaje
+      cargador: [[V(12.47, 1.75, Z_TAB + 0.28), V(12.47, 3.0, Z_TAB + 0.28), V(12.47, 3.0, 4.57), V(6.9, 3.0, 4.57), V(6.9, 1.6, 4.57)]],
+      // Acometida: sube por el poste de la calle y sube del suelo al tablero
+      acometida: [
+        [V(12.15, -0.05, 16.4), V(12.15, 4.6, 16.4)],
+        [V(12.53, -0.05, Z_TAB - 0.22), V(12.53, 0.85, Z_TAB - 0.22)],
+      ],
+      // Cable de carga: cuelga del cargador al puerto del carro
+      carro: [[V(7.0, 1.05, 4.69), V(7.25, 0.25, 5.3), V(7.9, 0.2, 6.0), V(8.1, 0.6, 6.28), V(8.22, 0.82, 6.28)]],
+      // Acometida de la red, enterrada en ángulo recto desde el poste hasta el tablero
+      red: [[V(12.15, 0.5, 16.4), V(12.15, 0.03, 16.4), V(12.15, 0.03, 15.6), V(13.9, 0.03, 15.6), V(13.9, 0.03, Z_TAB - 0.22), V(12.53, 0.03, Z_TAB - 0.22), V(12.53, 0.82, Z_TAB - 0.22)]],
     };
   }, []);
 
@@ -575,15 +693,13 @@ function Mundo({ progress, raton, movil }: Props) {
       <TechoSolar progress={progress} />
       <CasaDetalles progress={progress} />
       <Equipos progress={progress} energia={energia} />
-      {rutas.abrazaderas.map((r, i) => (
-        <Abrazaderas key={i} m={matsClips} puntos={r} cada={0.45} tam={0.07} />
-      ))}
       <Barrio progress={progress} />
-      <Cables rutas={rutas.dc} nivel={energia} grosor={0.024} fases={2} />
-      <Cables rutas={rutas.bat} nivel={energia} grosor={0.024} fases={2} />
-      <Cables rutas={rutas.ac} nivel={energia} grosor={0.024} fases={3} />
-      <Cables rutas={rutas.carro} nivel={carro} grosor={0.05} fases={1} />
-      <Cables rutas={rutas.red} nivel={deRed} grosor={0.045} fases={3} enterrado />
+      <Tuberia rutas={rutas.filas} radio={0.025} nivel={energia} cada={1.6} />
+      <Tuberia rutas={rutas.equipos} radio={0.03} nivel={energia} cada={1.2} />
+      <Tuberia rutas={rutas.cargador} radio={0.03} nivel={carro} cada={1.6} />
+      <Tuberia rutas={rutas.acometida} radio={0.045} nivel={deRed} />
+      <Cables rutas={rutas.carro} nivel={carro} grosor={0.035} fases={1} />
+      <Cables rutas={rutas.red} nivel={deRed} grosor={0.03} fases={3} enterrado recto />
     </>
   );
 }
