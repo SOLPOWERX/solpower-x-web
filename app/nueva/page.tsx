@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import "@/components/nueva/nueva.css";
 import Intro from "@/components/nueva/Intro";
 import HeaderNuevo from "@/components/nueva/HeaderNuevo";
-import HeroNuevo from "@/components/nueva/HeroNuevo";
+import HeroEscena from "@/components/nueva/HeroEscena";
 import Puertas from "@/components/nueva/Puertas";
 import Buscador from "@/components/nueva/Buscador";
-import PanelCapas from "@/components/nueva/PanelCapas";
 import IngenieriaDos from "@/components/nueva/IngenieriaDos";
 import Ley1715 from "@/components/nueva/Ley1715";
 import Nosotros from "@/components/nueva/Nosotros";
@@ -34,10 +32,9 @@ export default function NuevaPortada() {
       <SmoothScroll />
       <HeaderNuevo />
       <main>
-        <HeroNuevo />
+        <HeroEscena />
         <Puertas />
         <Buscador />
-        <PanelCapas />
         <Manifesto />
         <Analysis />
         <Solutions />

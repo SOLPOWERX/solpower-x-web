@@ -144,7 +144,7 @@ export default function HeaderNuevo() {
         {menu && (
           <motion.div
             key="veil"
-            className="fixed inset-0 z-40 hidden bg-azul-950/40 backdrop-blur-[6px] xl:block"
+            className="fixed inset-0 z-40 hidden bg-azul-950/40 backdrop-blur-[6px] lg:block"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -172,11 +172,11 @@ export default function HeaderNuevo() {
           animate={{ clipPath: "inset(0% 0% 0% 0% round 999px)", transitionEnd: { clipPath: "none" } }}
           transition={{ duration: 1.1, delay: 0.15, ease }}
         >
-          <a href="#inicio" aria-label="SOLPOWER X, inicio" className="shrink-0">
+          <a href="#inicio" aria-label="SOLPOWER X, inicio" className="shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
             <Logo light />
           </a>
 
-          <ul className="hidden items-center text-[0.875rem] font-medium xl:flex" onMouseLeave={() => setHover(null)}>
+          <ul className="hidden items-center text-[0.84rem] font-medium lg:flex xl:text-[0.875rem]" onMouseLeave={() => setHover(null)}>
             {links.map((l, i) => {
               const isActive = active === l.href;
               const isOpen = menu === l.mega && !!l.mega;
@@ -205,7 +205,7 @@ export default function HeaderNuevo() {
                     onClick={() => setMenu(null)}
                     aria-haspopup={l.mega ? "true" : undefined}
                     aria-expanded={l.mega ? isOpen : undefined}
-                    className={`group relative flex items-center gap-1.5 whitespace-nowrap px-3 py-2.5 transition-colors duration-300 ${
+                    className={`group relative flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2.5 transition-colors xl:px-3 duration-300 ${
                       isActive || isOpen ? "text-white" : "text-white/75"
                     }`}
                   >
@@ -262,7 +262,8 @@ export default function HeaderNuevo() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.15, type: "spring", stiffness: 200, damping: 15 }}
             >
-              Cotizar proyecto
+              <span className="lg:max-xl:hidden">Cotizar proyecto</span>
+              <span className="hidden lg:max-xl:inline">Cotizar</span>
               <span className="relative grid h-8 w-8 place-items-center overflow-hidden rounded-full bg-azul-950 text-sol-claro">
                 {[0, 1].map((k) => (
                   <svg
@@ -285,11 +286,13 @@ export default function HeaderNuevo() {
               type="button"
               onClick={() => setOpen(true)}
               aria-label="Abrir menú"
-              className="grid h-10 w-10 place-items-center rounded-full bg-sol text-azul-950 xl:hidden"
+              className="group flex h-10 items-center gap-2.5 rounded-full bg-white/[.08] pl-4 pr-3 text-sm font-semibold text-white ring-1 ring-inset ring-white/15 transition-colors hover:bg-white/15 lg:hidden"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
-                <path d="M4 7h16M4 12h16M4 17h10" strokeLinecap="round" />
-              </svg>
+              Menú
+              <span className="flex w-5 flex-col items-end gap-[5px]" aria-hidden>
+                <span className="h-[2px] w-5 rounded-full bg-sol-claro transition-all duration-300 group-hover:w-3" />
+                <span className="h-[2px] w-3 rounded-full bg-white transition-all duration-300 group-hover:w-5" />
+              </span>
             </button>
           </div>
 
@@ -306,7 +309,7 @@ export default function HeaderNuevo() {
           {panel && (
             <motion.div
               key={menu}
-              className={`mx-auto mt-3 hidden overflow-hidden ${scrolled ? "max-w-[76rem]" : "max-w-[80rem]"} rounded-[28px] border border-white/10 bg-azul-950/90 text-white shadow-[0_40px_90px_-30px_rgba(4,15,38,.9)] backdrop-blur-2xl xl:block`}
+              className={`mx-auto mt-3 hidden overflow-hidden ${scrolled ? "max-w-[76rem]" : "max-w-[80rem]"} rounded-[28px] border border-white/10 bg-azul-950/90 text-white shadow-[0_40px_90px_-30px_rgba(4,15,38,.9)] backdrop-blur-2xl lg:block`}
               initial={{ opacity: 0, y: -14, clipPath: "inset(0% 0% 100% 0% round 28px)" }}
               animate={{ opacity: 1, y: 0, clipPath: "inset(0% 0% 0% 0% round 28px)" }}
               exit={{ opacity: 0, y: -10, clipPath: "inset(0% 0% 100% 0% round 28px)" }}
@@ -400,7 +403,7 @@ export default function HeaderNuevo() {
         <AnimatePresence>
           {open && (
             <motion.div
-              className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-azul-950/95 p-6 text-white backdrop-blur-xl xl:hidden"
+              className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-azul-950/95 p-6 text-white backdrop-blur-xl lg:hidden"
               initial={{ clipPath: "circle(0% at 95% 4%)" }}
               animate={{ clipPath: "circle(150% at 95% 4%)" }}
               exit={{ clipPath: "circle(0% at 95% 4%)" }}
