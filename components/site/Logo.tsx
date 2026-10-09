@@ -12,7 +12,7 @@ const word = "SOLPOWER".split("");
 export default function Logo({ light = true, size = 40, circulo = true }: { light?: boolean; size?: number; circulo?: boolean }) {
   return (
     <span className="group flex items-center gap-2.5">
-      <span className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
+      <span className={`relative grid shrink-0 place-items-center ${circulo ? "" : "-top-1"}`} style={{ width: size, height: size }}>
         {/* Halo de sol que late */}
         {circulo && (<>
         <motion.span

@@ -188,7 +188,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
           </span>
 
           <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="relative shrink-0">
-            <Logo light={false} size={44} circulo={false} />
+            <Logo light={false} size={40} circulo={false} />
           </a>
 
           <ul className="hidden items-center text-[0.84rem] font-medium lg:flex xl:text-[0.875rem]" onMouseLeave={() => setHover(null)}>
