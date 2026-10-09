@@ -168,7 +168,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
         onMouseEnter={() => clearTimeout(closeTimer.current)}
       >
         <motion.nav
-          className={`nav-ring mx-auto flex items-center justify-between rounded-full bg-gradient-to-r py-2 pl-3 pr-2 text-azul backdrop-blur-2xl backdrop-saturate-150 transition-[max-width,box-shadow] duration-700 md:pl-4 ${
+          className={`nav-ring mx-auto flex items-center gap-3 rounded-full bg-gradient-to-r py-2 pl-5 pr-2 text-azul backdrop-blur-2xl backdrop-saturate-150 transition-[max-width,box-shadow] duration-700 md:pl-6 xl:gap-6 ${
             scrolled
               ? "max-w-[76rem] from-[#e9effa]/90 via-white/85 to-[#fff3d6]/90 shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
               : "max-w-[80rem] from-[#e9effa]/75 via-white/65 to-[#fff3d6]/75 shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
@@ -252,7 +252,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
             })}
           </ul>
 
-          <div className="relative flex items-center gap-2">
+          <div className="relative ml-auto flex items-center gap-2">
             <motion.a
               href={`tel:${site.phoneRaw}`}
               aria-label={`Llamar al ${site.phone}`}
