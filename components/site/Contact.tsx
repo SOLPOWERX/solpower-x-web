@@ -47,7 +47,7 @@ export default function Contact({ imagen }: { imagen?: string }) {
     <section id="contacto" className="bg-white py-24 md:py-32">
       <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[32px] shadow-[0_40px_90px_-40px_rgba(13,43,94,.55)] lg:grid-cols-[0.9fr_1.1fr]">
         <div className="relative min-h-[420px] p-8 text-white md:p-12">
-          <Image src={imagen ?? `${media.heroPoster}?w=1400&q=70&auto=format`} alt="" fill sizes="50vw" unoptimized={imagen?.endsWith(".svg")} className="object-cover" />
+          {!imagen && <Image src={`${media.heroPoster}?w=1400&q=70&auto=format`} alt="" fill sizes="50vw" className="object-cover" />}
           <div className="absolute inset-0 bg-gradient-to-br from-azul/95 via-azul/85 to-azul-950/90" />
           <div className="relative flex h-full flex-col">
             <p className="mb-4 font-semibold text-sol">Contáctanos</p>
@@ -55,7 +55,17 @@ export default function Contact({ imagen }: { imagen?: string }) {
             <p className="mt-5 max-w-sm text-white/80">
               Cuéntanos qué necesitas y te respondemos con los siguientes pasos y una cotización.
             </p>
-            <dl className="mt-auto space-y-5 pt-12">
+            {imagen && (
+              <Image
+                src={imagen}
+                alt="Conversación por WhatsApp, correo y cobertura en toda Colombia"
+                width={1000}
+                height={560}
+                unoptimized={imagen.endsWith(".svg")}
+                className="mt-8 h-auto w-full"
+              />
+            )}
+            <dl className={`mt-auto space-y-5 ${imagen ? "pt-8" : "pt-12"}`}>
               <div>
                 <dt className="text-sm text-white/60">WhatsApp y teléfono</dt>
                 <dd>
