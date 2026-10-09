@@ -7,14 +7,13 @@ const word = "SOLPOWER".split("");
 
 /**
  * Logo animado: el isotipo entra girando con un sol que se enciende detrás y las letras aparecen una a una.
- * Con `circulo={false}` el isotipo va solo, sin el círculo blanco ni el sol de fondo (para menús claros).
+ * Con `circulo={false}` el isotipo va sin el círculo blanco (para menús claros); el sol y los rayos se mantienen.
  */
 export default function Logo({ light = true, size = 40, circulo = true }: { light?: boolean; size?: number; circulo?: boolean }) {
   return (
     <span className="group flex items-center gap-2.5">
       <span className="relative grid shrink-0 place-items-center" style={{ width: size, height: size }}>
         {/* Halo de sol que late */}
-        {circulo && (<>
         <motion.span
           aria-hidden
           className="absolute inset-[-35%] rounded-full bg-[radial-gradient(circle,rgba(255,194,61,.75)_0%,rgba(240,165,0,.25)_45%,transparent_70%)]"
@@ -40,10 +39,9 @@ export default function Logo({ light = true, size = 40, circulo = true }: { ligh
             rotate: { duration: 16, repeat: Infinity, ease: "linear" },
           }}
         />
-        </>)}
         <motion.span
           className={`relative grid h-full w-full place-items-center transition-transform duration-500 group-hover:rotate-[-12deg] group-hover:scale-110 ${
-            circulo ? "rounded-full bg-white p-[14%] shadow-[0_4px_14px_-4px_rgba(13,43,94,.45)]" : ""
+            circulo ? "rounded-full bg-white p-[14%] shadow-[0_4px_14px_-4px_rgba(13,43,94,.45)]" : "p-[10%]"
           }`}
           initial={{ rotate: -200, scale: 0.3, opacity: 0 }}
           animate={{ rotate: 0, scale: 1, opacity: 1 }}
