@@ -1,11 +1,10 @@
 "use client";
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
-import { Bloom, EffectComposer, ToneMapping } from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
+import Lienzo from "./Lienzo";
 import type { MotionValue } from "framer-motion";
 import { Bateria, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, lerp, texturaCeldas, tramo, type Momento, type Zona } from "./comun";
@@ -706,23 +705,8 @@ function Mundo({ progress, raton, movil }: Props) {
 
 export default function EscenaHogar(props: Props) {
   return (
-    <Canvas
-      shadows={props.movil ? true : "soft"}
-      dpr={props.movil ? [1, 1.5] : [1, 1.75]}
-      camera={{ fov: props.movil ? 55 : 42, near: 0.1, far: 1500, position: [-22, 7, 25] }}
-      gl={{ antialias: true, powerPreference: "high-performance" }}
-      onCreated={({ gl }) => {
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.05;
-      }}
-    >
+    <Lienzo movil={props.movil} posicion={[-22, 7, 25]}>
       <Mundo {...props} />
-      {!props.movil && (
-        <EffectComposer multisampling={4}>
-          <Bloom mipmapBlur intensity={0.85} luminanceThreshold={0.9} luminanceSmoothing={0.25} />
-          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
-        </EffectComposer>
-      )}
-    </Canvas>
+    </Lienzo>
   );
 }

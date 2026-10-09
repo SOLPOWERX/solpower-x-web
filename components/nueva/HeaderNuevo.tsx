@@ -160,7 +160,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
       </AnimatePresence>
 
       <motion.header
-        className="fixed inset-x-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-5"
+        className={`fixed inset-x-0 top-0 px-3 pt-3 md:px-6 md:pt-5 ${open ? "z-[80]" : "z-50"}`}
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: hidden && !open ? -130 : 0, opacity: 1 }}
         transition={{ duration: 0.55, ease: [0.2, 0.8, 0.2, 1] }}
@@ -168,10 +168,10 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
         onMouseEnter={() => clearTimeout(closeTimer.current)}
       >
         <motion.nav
-          className={`nav-ring mx-auto flex items-center gap-3 rounded-full bg-gradient-to-r py-2 pl-5 pr-2 text-azul backdrop-blur-2xl backdrop-saturate-150 transition-[max-width,box-shadow] duration-700 md:pl-6 xl:gap-6 ${
+          className={`nav-ring mx-auto flex items-center gap-3 rounded-full bg-gradient-to-r py-2 pl-5 pr-2 text-azul backdrop-blur-md transition-[max-width,box-shadow] duration-700 md:pl-6 xl:gap-6 ${
             scrolled
-              ? "max-w-[76rem] from-[#e9effa]/90 via-white/85 to-[#fff3d6]/90 shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
-              : "max-w-[80rem] from-[#e9effa]/75 via-white/65 to-[#fff3d6]/75 shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
+              ? "max-w-[76rem] from-[#e9effa]/95 via-white/90 to-[#fff3d6]/95 shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
+              : "max-w-[80rem] from-[#e9effa]/85 via-white/75 to-[#fff3d6]/85 shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
           }`}
           initial={{ clipPath: "inset(0% 46% 0% 46% round 999px)" }}
           animate={{ clipPath: "inset(0% 0% 0% 0% round 999px)", transitionEnd: { clipPath: "none" } }}
@@ -180,9 +180,9 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
           {/* Reflejo de luz que cruza el menú cada pocos segundos */}
           <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
             <motion.span
-              className="absolute inset-y-0 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-white/80 to-transparent"
-              initial={{ left: "-30%" }}
-              animate={{ left: ["-30%", "130%"] }}
+              className="absolute inset-y-0 left-0 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-white/80 to-transparent will-change-transform"
+              initial={{ x: "-120%" }}
+              animate={{ x: ["-120%", "520%"] }}
               transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 4.5, ease: "easeInOut", delay: 2 }}
             />
           </span>
@@ -430,48 +430,69 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
         <AnimatePresence>
           {open && (
             <motion.div
-              className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-azul-950/95 p-6 text-white backdrop-blur-xl lg:hidden"
-              initial={{ clipPath: "circle(0% at 95% 4%)" }}
-              animate={{ clipPath: "circle(150% at 95% 4%)" }}
-              exit={{ clipPath: "circle(0% at 95% 4%)" }}
+              className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-gradient-to-b from-[#eef3fb] via-white to-[#fff6e0] px-6 pb-8 pt-5 text-azul lg:hidden"
+              initial={{ clipPath: "circle(0% at 92% 5%)" }}
+              animate={{ clipPath: "circle(150% at 92% 5%)" }}
+              exit={{ clipPath: "circle(0% at 92% 5%)" }}
               transition={{ duration: 0.6, ease }}
             >
-              <div className="flex items-center justify-between">
-                <Logo />
+              {/* Brillo de sol suave en la esquina */}
+              <span aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(255,194,61,.35),transparent_65%)]" />
+
+              <div className="relative flex items-center justify-between">
+                <Logo light={false} size={40} circulo={false} />
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
                   aria-label="Cerrar menú"
-                  className="grid h-11 w-11 place-items-center rounded-full bg-white/10"
+                  className="grid h-11 w-11 place-items-center rounded-full bg-azul/[.06] text-azul ring-1 ring-inset ring-azul/10"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden>
                     <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
                   </svg>
                 </button>
               </div>
-              <ul className="mt-10 space-y-2">
+
+              <ul className="relative mt-8 divide-y divide-azul/10 border-y border-azul/10">
                 {links.map((l, i) => (
                   <motion.li
                     key={l.href}
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.15 + i * 0.06 }}
+                    initial={{ opacity: 0, y: 18 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.18 + i * 0.05, duration: 0.45, ease: [0.2, 0.8, 0.2, 1] }}
                   >
-                    <a href={ir(l.href)} onClick={() => setOpen(false)} className="flex items-baseline gap-4 py-1.5 text-3xl font-semibold">
-                      <span className="text-sm font-medium text-sol">0{i + 1}</span>
-                      {l.label}
+                    <a href={ir(l.href)} onClick={() => setOpen(false)} className="group flex items-center gap-4 py-3.5">
+                      <span className="w-6 text-xs font-semibold text-sol">0{i + 1}</span>
+                      <span className="flex-1 text-[1.4rem] font-semibold leading-tight">{l.label}</span>
+                      <span className="grid h-9 w-9 place-items-center rounded-full bg-azul/[.06] text-azul transition-colors group-active:bg-sol group-active:text-azul-950">
+                        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden>
+                          <path d="M2 7h10M8 3l4 4-4 4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
                     </a>
                   </motion.li>
                 ))}
               </ul>
-              <a
-                href={`${site.whatsapp}un%20proyecto`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-sol shine mt-auto"
+
+              <motion.div
+                className="relative mt-auto pt-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.55, duration: 0.5 }}
               >
-                Escribir por WhatsApp
-              </a>
+                <div className="grid grid-cols-2 gap-3">
+                  <a href={`${site.whatsapp}un%20proyecto`} target="_blank" rel="noopener noreferrer" className="btn-sol shine justify-center">
+                    WhatsApp
+                  </a>
+                  <a
+                    href={`tel:${site.phoneRaw}`}
+                    className="inline-flex items-center justify-center rounded-full font-semibold text-azul ring-1 ring-inset ring-azul/25"
+                  >
+                    Llamar
+                  </a>
+                </div>
+                <p className="mt-4 text-center text-sm text-azul/60">{site.email} · Toda Colombia</p>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
