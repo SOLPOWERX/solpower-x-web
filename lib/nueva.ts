@@ -7,6 +7,8 @@ import { waEmpresas } from "./empresas";
 const r = (n: string) => `/render/${n}.jpg`;
 /** Maquetas 3D hechas a propósito para cada idea (public/img3d). */
 const m = (n: string) => `/img3d/${n}.jpg`;
+/** Ilustraciones planas (SVG livianos con efectos suaves). */
+const il = (n: string) => `/ilustraciones/${n}.svg`;
 
 export { waEmpresas };
 
@@ -133,11 +135,12 @@ export const ingenierias = [
 ];
 
 export const cierre = { imagen: m("cierre") };
-export const imagenNosotros = m("nosotros");
-export const imagenContacto = m("contacto");
+export const imagenNosotros = il("nosotros");
+export const imagenContacto = il("contacto");
+export const imagenLey1715 = il("ley1715");
 
 /** Soluciones solares de la portada nueva, cada una con su imagen 3D. */
-const imgSolucion: Record<string, string> = { "on-grid": m("ongrid"), "off-grid": m("offgrid"), hibridos: m("hibrido"), bess: m("bess"), "gran-escala": m("granja") };
+const imgSolucion: Record<string, string> = { "on-grid": il("ongrid"), "off-grid": il("offgrid"), hibridos: il("hibrido"), bess: il("bess"), "gran-escala": il("granja") };
 export const solucionesNueva = solar.map((s) => ({ ...s, image: imgSolucion[s.id] ?? s.image }));
 
 /** Servicios de ingeniería eléctrica para el menú, con su imagen 3D. */

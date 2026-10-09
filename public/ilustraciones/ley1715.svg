@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" width="1000" height="820"><defs>
+  <linearGradient id="panel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c63c9"/><stop offset=".55" stop-color="#173f93"/><stop offset="1" stop-color="#0d2b6e"/></linearGradient>
+  <radialGradient id="sol" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff3c4"/><stop offset=".45" stop-color="#ffc23d"/><stop offset="1" stop-color="#f0a500" stop-opacity="0"/></radialGradient>
+  <filter id="brillo" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter>
+  <filter id="brilloChico" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="halo" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="18"/></filter>
+  <linearGradient id="papel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eef5"/></linearGradient>
+  <radialGradient id="moneda" cx=".35" cy=".35" r=".7"><stop offset="0" stop-color="#ffe7a3"/><stop offset=".6" stop-color="#f0a500"/><stop offset="1" stop-color="#c47f00"/></radialGradient>
+</defs><g transform="rotate(-6 420 330)">
+    <rect x="250" y="110" width="340" height="440" rx="18" fill="url(#papel)"/>
+    <rect x="250" y="110" width="340" height="78" rx="18" fill="#0d2b5e"/><rect x="250" y="160" width="340" height="28" fill="#0d2b5e"/>
+    <text x="282" y="162" font-family="Poppins, Arial, sans-serif" font-weight="700" font-size="34" fill="#ffffff">LEY 1715</text>
+    <rect x="282" y="224" width="270" height="12" rx="6" fill="#c9d2de"/><rect x="282" y="258" width="270" height="12" rx="6" fill="#c9d2de"/><rect x="282" y="292" width="170" height="12" rx="6" fill="#c9d2de"/><rect x="282" y="326" width="270" height="12" rx="6" fill="#c9d2de"/><rect x="282" y="360" width="270" height="12" rx="6" fill="#c9d2de"/><rect x="282" y="394" width="170" height="12" rx="6" fill="#c9d2de"/>
+    <rect x="282" y="440" width="120" height="12" rx="6" fill="#c9d2de"/>
+  </g><g transform="translate(560 430)"><circle r="104" fill="#f0a500" opacity=".25" filter="url(#halo)"><animate attributeName="opacity" values=".15;.4;.15" dur="3s" repeatCount="indefinite"/></circle>
+    <circle r="92" fill="url(#moneda)"/><circle r="74" fill="none" stroke="#fff3c4" stroke-width="3" stroke-dasharray="6 7"/>
+    <text y="18" text-anchor="middle" font-family="Poppins, Arial, sans-serif" font-weight="800" font-size="58" fill="#0d2b5e">50%</text>
+    <path d="M-60 80 L-82 150 L-48 132 L-30 160 L-14 92Z" fill="#c62828"/><path d="M60 80 L82 150 L48 132 L30 160 L14 92Z" fill="#c62828"/></g><ellipse cx="220" cy="640" rx="78" ry="26" fill="#c47f00"/><ellipse cx="220" cy="632" rx="78" ry="26" fill="url(#moneda)"/><ellipse cx="220" cy="618" rx="78" ry="26" fill="#c47f00"/><ellipse cx="220" cy="610" rx="78" ry="26" fill="url(#moneda)"/><ellipse cx="220" cy="596" rx="78" ry="26" fill="#c47f00"/><ellipse cx="220" cy="588" rx="78" ry="26" fill="url(#moneda)"/><ellipse cx="220" cy="574" rx="78" ry="26" fill="#c47f00"/><ellipse cx="220" cy="566" rx="78" ry="26" fill="url(#moneda)"/><ellipse cx="220" cy="552" rx="78" ry="26" fill="#c47f00"/><ellipse cx="220" cy="544" rx="78" ry="26" fill="url(#moneda)"/><ellipse cx="330" cy="680" rx="66" ry="22" fill="#c47f00"/><ellipse cx="330" cy="673" rx="66" ry="22" fill="url(#moneda)"/><ellipse cx="330" cy="658" rx="66" ry="22" fill="#c47f00"/><ellipse cx="330" cy="651" rx="66" ry="22" fill="url(#moneda)"/><ellipse cx="330" cy="636" rx="66" ry="22" fill="#c47f00"/><ellipse cx="330" cy="629" rx="66" ry="22" fill="url(#moneda)"/><g transform="translate(700 600)"><polygon points="0,0 190,-40 230,40 40,80" fill="url(#panel)" stroke="#dfe7f2" stroke-width="3"/>
+    <line x1="63" y1="-13" x2="103" y2="67" stroke="rgba(255,255,255,.25)"/><line x1="127" y1="-27" x2="167" y2="53" stroke="rgba(255,255,255,.25)"/><line x1="20" y1="40" x2="210" y2="0" stroke="rgba(255,255,255,.25)"/>
+    <rect x="105" y="60" width="12" height="70" fill="#8e99a8"/></g>
+    <path d="M640 230 C 700 200 760 170 820 90" fill="none" stroke="#ffc23d" stroke-width="6" stroke-linecap="round" stroke-dasharray="10 12"><animate attributeName="stroke-dashoffset" from="44" to="0" dur="1.2s" repeatCount="indefinite"/></path>
+    <path d="M800 84 L834 78 L826 112Z" fill="#ffc23d"/></svg>

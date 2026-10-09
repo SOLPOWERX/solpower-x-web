@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useInView } from "framer-motion";
 import { incentives } from "@/lib/content";
+import { imagenLey1715 } from "@/lib/nueva";
 
 /** Franja de beneficios tributarios de la Ley 1715. */
 export default function Ley1715() {
@@ -32,6 +33,15 @@ export default function Ley1715() {
           <p className="mt-4 max-w-md text-sm text-white/55">
             Requiere certificación de la UPME. Le acompañamos en todo el trámite.
           </p>
+          <motion.img
+            src={imagenLey1715}
+            alt=""
+            className="mt-8 w-full max-w-md"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }}
+          />
         </div>
 
         <ul className="grid gap-4 sm:grid-cols-2">

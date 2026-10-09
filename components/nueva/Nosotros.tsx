@@ -17,7 +17,7 @@ export default function Nosotros() {
           viewport={{ once: true, margin: "-15%" }}
           transition={{ duration: 1.2, ease: [0.7, 0, 0.2, 1] }}
         >
-          <Image src={imagenNosotros} alt="" fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
+          <Image src={imagenNosotros} alt="" fill unoptimized={imagenNosotros.endsWith(".svg")} sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
           <span className="absolute inset-0 bg-gradient-to-t from-azul-950/90 via-azul-950/10 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-4 p-7 text-white">
             <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white p-2">

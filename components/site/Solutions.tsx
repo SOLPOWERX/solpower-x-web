@@ -101,6 +101,7 @@ export default function Solutions({ items = solar }: { items?: typeof solar }) {
                   alt={s.title}
                   fill
                   sizes="(min-width: 1024px) 70vw, 100vw"
+                  unoptimized={s.image.endsWith(".svg")}
                   className="object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-105"
                 />
               </div>

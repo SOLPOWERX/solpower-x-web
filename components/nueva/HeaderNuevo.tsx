@@ -382,6 +382,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                       >
                         <Image
                           src={it.image}
+                          unoptimized={it.image.endsWith(".svg")}
                           alt=""
                           fill
                           sizes="200px"
