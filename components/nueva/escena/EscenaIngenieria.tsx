@@ -108,7 +108,7 @@ function Cota({ progress, pos, texto }: { progress: MotionValue<number>; pos: [n
 
 /* ---------- Transformador de potencia ---------- */
 
-export function Transformador() {
+function Transformador() {
   const cuerpo = <meshStandardMaterial color="#8e9aa8" metalness={0.55} roughness={0.4} />;
   const porcelana = <meshStandardMaterial color="#7a4a2c" roughness={0.3} />;
   return (
@@ -165,7 +165,7 @@ export function Transformador() {
 
 /* ---------- Pórtico de llegada de la línea ---------- */
 
-export function Portico() {
+function Portico() {
   const acero = <meshStandardMaterial color="#9aa3ae" metalness={0.75} roughness={0.35} />;
   const porcelana = <meshStandardMaterial color="#7a4a2c" roughness={0.3} />;
   return (
