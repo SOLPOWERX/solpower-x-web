@@ -116,7 +116,7 @@ export const ingenierias = [
     kicker: "Para clientes e instaladores",
     title: "Ingeniería solar",
     body: "Todo lo técnico de un proyecto solar, con diseño y firma de ingeniería eléctrica.",
-    image: m("ing-solar"),
+    image: il("ing-solar"),
     items: [
       { title: "Diseño y simulación PVsyst", body: "Producción esperada, pérdidas y tamaño óptimo del sistema." },
       { title: "Planos y memorias de cálculo RETIE", body: "Diagrama unifilar, protecciones, cableado y puesta a tierra." },
@@ -129,7 +129,7 @@ export const ingenierias = [
     kicker: "Otros servicios",
     title: "Servicios de ingeniería eléctrica",
     body: "Infraestructura eléctrica segura y con cumplimiento normativo, del poste al tablero.",
-    image: m("subestaciones"),
+    image: il("subestaciones"),
     items: engineering.map((e) => ({ title: e.title, body: e.body })),
   },
 ];

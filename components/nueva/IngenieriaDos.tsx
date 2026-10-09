@@ -36,6 +36,7 @@ export default function IngenieriaDos() {
                   alt=""
                   fill
                   sizes="(min-width: 1024px) 50vw, 100vw"
+                  unoptimized={g.image.endsWith(".svg")}
                   className="object-cover transition-transform duration-[1.4s] ease-out group-hover:scale-110"
                 />
                 <span className="absolute inset-0 bg-gradient-to-t from-azul-950 via-azul-950/40 to-transparent" />
