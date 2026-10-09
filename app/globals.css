@@ -145,6 +145,10 @@ html.lenis body {
   transition-delay: calc(var(--i) * 18ms);
   text-shadow: 0 1.25em 0 #ffc23d;
 }
+/* En menús claros el texto que entra es dorado oscuro, para que se lea */
+.roll.roll-claro > span {
+  text-shadow: 0 1.25em 0 #b06f00;
+}
 .group:hover .roll > span,
 .group:focus-visible .roll > span,
 .roll.is-open > span {

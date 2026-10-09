@@ -55,7 +55,7 @@ const ease = [0.7, 0, 0.2, 1] as const;
 /** Texto que rueda letra por letra al pasar el mouse. */
 function Roll({ text, open }: { text: string; open?: boolean }) {
   return (
-    <span className={`roll ${open ? "is-open" : ""}`} aria-hidden>
+    <span className={`roll roll-claro ${open ? "is-open" : ""}`} aria-hidden>
       {text.split("").map((ch, i) => (
         <span key={i} style={{ ["--i" as string]: i }}>
           {ch === " " ? " " : ch}
@@ -168,17 +168,27 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
         onMouseEnter={() => clearTimeout(closeTimer.current)}
       >
         <motion.nav
-          className={`nav-ring mx-auto flex items-center justify-between rounded-full bg-white py-2 pl-3 pr-2 text-azul transition-[max-width,box-shadow] duration-700 md:pl-4 ${
+          className={`nav-ring mx-auto flex items-center justify-between rounded-full bg-gradient-to-r py-2 pl-3 pr-2 text-azul backdrop-blur-2xl backdrop-saturate-150 transition-[max-width,box-shadow] duration-700 md:pl-4 ${
             scrolled
-              ? "max-w-[76rem] shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
-              : "max-w-[80rem] shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
+              ? "max-w-[76rem] from-[#e9effa]/90 via-white/85 to-[#fff3d6]/90 shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
+              : "max-w-[80rem] from-[#e9effa]/75 via-white/65 to-[#fff3d6]/75 shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
           }`}
           initial={{ clipPath: "inset(0% 46% 0% 46% round 999px)" }}
           animate={{ clipPath: "inset(0% 0% 0% 0% round 999px)", transitionEnd: { clipPath: "none" } }}
           transition={{ duration: 1.1, delay: 0.15, ease }}
         >
-          <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
-            <Logo light={false} size={48} circulo={false} />
+          {/* Reflejo de luz que cruza el menú cada pocos segundos */}
+          <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-full">
+            <motion.span
+              className="absolute inset-y-0 w-1/4 -skew-x-12 bg-gradient-to-r from-transparent via-white/80 to-transparent"
+              initial={{ left: "-30%" }}
+              animate={{ left: ["-30%", "130%"] }}
+              transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 4.5, ease: "easeInOut", delay: 2 }}
+            />
+          </span>
+
+          <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="relative shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
+            <Logo light={false} size={44} circulo={false} />
           </a>
 
           <ul className="hidden items-center text-[0.84rem] font-medium lg:flex xl:text-[0.875rem]" onMouseLeave={() => setHover(null)}>
@@ -200,7 +210,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                   {(hover === l.href || isOpen) && (
                     <motion.span
                       layoutId="nav-pill"
-                      className="absolute inset-0 rounded-full bg-azul/[.06] ring-1 ring-inset ring-azul/10"
+                      className="absolute inset-0 rounded-full bg-sol/15 ring-1 ring-inset ring-sol/40"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -242,7 +252,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
             })}
           </ul>
 
-          <div className="flex items-center gap-2">
+          <div className="relative flex items-center gap-2">
             <motion.a
               href={`tel:${site.phoneRaw}`}
               aria-label={`Llamar al ${site.phone}`}
