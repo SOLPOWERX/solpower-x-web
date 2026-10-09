@@ -134,7 +134,7 @@ export const ingenierias = [
   },
 ];
 
-export const cierre = { imagen: m("cierre") };
+export const cierre = { imagen: il("cierre") };
 export const imagenNosotros = il("nosotros");
 export const imagenContacto = il("contacto");
 export const imagenLey1715 = il("ley1715");

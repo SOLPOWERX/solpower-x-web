@@ -5,11 +5,11 @@ import Image from "next/image";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { cierre, waEmpresas } from "@/lib/nueva";
 
-/** Cierre con imagen 3D de fondo: la invitación a enviar la factura. */
+/** Cierre: la invitación a enviar la factura y, debajo, la ilustración de los tres pasos. */
 export default function Cierre() {
   const root = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: root, offset: ["start end", "end start"] });
-  const scale = useTransform(scrollYProgress, [0, 1], [1.25, 1]);
+  const y = useTransform(scrollYProgress, [0, 0.5], [60, 0]);
   const clip = useTransform(scrollYProgress, (v) => {
     const k = 1 - Math.min(1, v / 0.4);
     return `inset(${8 * k}% ${6 * k}% ${8 * k}% ${6 * k}% round ${40 * k}px)`;
@@ -17,12 +17,11 @@ export default function Cierre() {
 
   return (
     <section ref={root} className="relative bg-white">
-      <motion.div className="relative overflow-hidden bg-azul-950 text-white" style={{ clipPath: clip }}>
-        <motion.div className="absolute inset-0" style={{ scale }} aria-hidden>
-          <Image src={cierre.imagen} alt="" fill sizes="100vw" className="object-cover" />
-        </motion.div>
-        <span className="absolute inset-0 bg-azul-950/60" />
-        <div className="relative mx-auto flex min-h-[80svh] max-w-4xl flex-col items-center justify-center px-5 py-24 text-center">
+      <motion.div
+        className="relative overflow-hidden bg-gradient-to-b from-azul-950 via-[#0a2149] to-azul-950 text-white"
+        style={{ clipPath: clip }}
+      >
+        <div className="relative mx-auto flex max-w-6xl flex-col items-center px-5 pb-16 pt-24 text-center md:pb-20">
           <h2 className="text-[clamp(2.2rem,5.5vw,4.4rem)] font-bold leading-[1.05] tracking-tight">
             Envíenos su factura.
             <br />
@@ -37,6 +36,16 @@ export default function Cierre() {
               Llenar el formulario
             </a>
           </div>
+          <motion.div className="mt-14 w-full" style={{ y }}>
+            <Image
+              src={cierre.imagen}
+              alt="Usted envía la foto de su factura, le mostramos cuánto baja con energía solar y su techo empieza a producir."
+              width={1600}
+              height={660}
+              unoptimized
+              className="h-auto w-full"
+            />
+          </motion.div>
         </div>
       </motion.div>
     </section>
