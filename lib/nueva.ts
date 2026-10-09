@@ -5,6 +5,8 @@ import { waEmpresas } from "./empresas";
 
 /** Imágenes propias: vistas de nuestras escenas 3D (public/render). Nada de fotos de bancos de imágenes. */
 const r = (n: string) => `/render/${n}.jpg`;
+/** Maquetas 3D hechas a propósito para cada idea (public/img3d). */
+const m = (n: string) => `/img3d/${n}.jpg`;
 
 export { waEmpresas };
 
@@ -112,7 +114,7 @@ export const ingenierias = [
     kicker: "Para clientes e instaladores",
     title: "Ingeniería solar",
     body: "Todo lo técnico de un proyecto solar, con diseño y firma de ingeniería eléctrica.",
-    image: r("ing-solar"),
+    image: m("ing-solar"),
     items: [
       { title: "Diseño y simulación PVsyst", body: "Producción esperada, pérdidas y tamaño óptimo del sistema." },
       { title: "Planos y memorias de cálculo RETIE", body: "Diagrama unifilar, protecciones, cableado y puesta a tierra." },
@@ -125,19 +127,19 @@ export const ingenierias = [
     kicker: "Otros servicios",
     title: "Servicios de ingeniería eléctrica",
     body: "Infraestructura eléctrica segura y con cumplimiento normativo, del poste al tablero.",
-    image: r("subestaciones"),
+    image: m("subestaciones"),
     items: engineering.map((e) => ({ title: e.title, body: e.body })),
   },
 ];
 
-export const cierre = { imagen: r("cierre") };
-export const imagenNosotros = r("nosotros");
-export const imagenContacto = r("contacto");
+export const cierre = { imagen: m("cierre") };
+export const imagenNosotros = m("nosotros");
+export const imagenContacto = m("contacto");
 
 /** Soluciones solares de la portada nueva, cada una con su imagen 3D. */
-const imgSolucion: Record<string, string> = { "on-grid": r("ongrid"), "off-grid": r("offgrid"), hibridos: r("hibrido"), bess: r("bess"), "gran-escala": r("granja") };
+const imgSolucion: Record<string, string> = { "on-grid": m("ongrid"), "off-grid": m("offgrid"), hibridos: m("hibrido"), bess: m("bess"), "gran-escala": m("granja") };
 export const solucionesNueva = solar.map((s) => ({ ...s, image: imgSolucion[s.id] ?? s.image }));
 
 /** Servicios de ingeniería eléctrica para el menú, con su imagen 3D. */
-const imgIngenieria = [r("redes"), r("subestaciones"), r("instalaciones"), r("retie"), r("calidad")];
+const imgIngenieria = [m("redes"), m("subestaciones"), m("instalaciones"), m("retie"), m("calidad")];
 export const ingenieriaNueva = engineering.map((e, i) => ({ ...e, image: imgIngenieria[i] ?? e.image }));
