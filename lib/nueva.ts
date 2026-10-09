@@ -5,8 +5,6 @@ import { waEmpresas } from "./empresas";
 
 /** Imágenes propias: vistas de nuestras escenas 3D (public/render). Nada de fotos de bancos de imágenes. */
 const r = (n: string) => `/render/${n}.jpg`;
-/** Maquetas 3D hechas a propósito para cada idea (public/img3d). */
-const m = (n: string) => `/img3d/${n}.jpg`;
 /** Ilustraciones planas (SVG livianos con efectos suaves). */
 const il = (n: string) => `/ilustraciones/${n}.svg`;
 
@@ -144,5 +142,5 @@ const imgSolucion: Record<string, string> = { "on-grid": il("ongrid"), "off-grid
 export const solucionesNueva = solar.map((s) => ({ ...s, image: imgSolucion[s.id] ?? s.image }));
 
 /** Servicios de ingeniería eléctrica para el menú, con su imagen 3D. */
-const imgIngenieria = [m("redes"), m("subestaciones"), m("instalaciones"), m("retie"), m("calidad")];
+const imgIngenieria = [il("menu-redes"), il("menu-subestaciones"), il("menu-instalaciones"), il("menu-retie"), il("menu-calidad")];
 export const ingenieriaNueva = engineering.map((e, i) => ({ ...e, image: imgIngenieria[i] ?? e.image }));
