@@ -168,17 +168,17 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
         onMouseEnter={() => clearTimeout(closeTimer.current)}
       >
         <motion.nav
-          className={`nav-ring mx-auto flex items-center justify-between rounded-full py-2 pl-3 pr-2 text-white transition-[max-width,background-color,box-shadow] duration-700 md:pl-4 ${
+          className={`nav-ring mx-auto flex items-center justify-between rounded-full bg-white py-2 pl-3 pr-2 text-azul transition-[max-width,box-shadow] duration-700 md:pl-4 ${
             scrolled
-              ? "max-w-[76rem] bg-azul-950/80 shadow-[0_18px_50px_-18px_rgba(4,15,38,.85)] backdrop-blur-2xl"
-              : "max-w-[80rem] bg-azul-950/35 backdrop-blur-xl"
+              ? "max-w-[76rem] shadow-[0_18px_50px_-18px_rgba(4,15,38,.55)]"
+              : "max-w-[80rem] shadow-[0_12px_40px_-20px_rgba(4,15,38,.45)]"
           }`}
           initial={{ clipPath: "inset(0% 46% 0% 46% round 999px)" }}
           animate={{ clipPath: "inset(0% 0% 0% 0% round 999px)", transitionEnd: { clipPath: "none" } }}
           transition={{ duration: 1.1, delay: 0.15, ease }}
         >
           <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
-            <Logo light />
+            <Logo light={false} size={46} circulo={false} />
           </a>
 
           <ul className="hidden items-center text-[0.84rem] font-medium lg:flex xl:text-[0.875rem]" onMouseLeave={() => setHover(null)}>
@@ -200,7 +200,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                   {(hover === l.href || isOpen) && (
                     <motion.span
                       layoutId="nav-pill"
-                      className="absolute inset-0 rounded-full bg-white/[.09] ring-1 ring-inset ring-white/10"
+                      className="absolute inset-0 rounded-full bg-azul/[.06] ring-1 ring-inset ring-azul/10"
                       transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -211,7 +211,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                     aria-haspopup={l.mega ? "true" : undefined}
                     aria-expanded={l.mega ? isOpen : undefined}
                     className={`group relative flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2.5 transition-colors xl:px-3 duration-300 ${
-                      isActive || isOpen ? "text-white" : "text-white/75"
+                      isActive || isOpen ? "text-azul" : "text-azul/70"
                     }`}
                   >
                     <span className="sr-only">{l.label}</span>
@@ -224,7 +224,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                         aria-hidden
                         animate={{ rotate: isOpen ? 180 : 0 }}
                         transition={{ duration: 0.35 }}
-                        className={isOpen ? "text-sol-claro" : "text-white/50"}
+                        className={isOpen ? "text-sol" : "text-azul/40"}
                       >
                         <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
                       </motion.svg>
@@ -246,7 +246,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
             <motion.a
               href={`tel:${site.phoneRaw}`}
               aria-label={`Llamar al ${site.phone}`}
-              className="hidden h-10 w-10 place-items-center rounded-full bg-white/[.08] text-white/85 ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/15 hover:text-sol-claro 2xl:grid"
+              className="hidden h-10 w-10 place-items-center rounded-full bg-azul/[.06] text-azul ring-1 ring-inset ring-azul/10 transition-colors hover:bg-azul/10 hover:text-sol 2xl:grid"
               initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.05, type: "spring", stiffness: 220, damping: 16 }}
@@ -291,12 +291,12 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
               type="button"
               onClick={() => setOpen(true)}
               aria-label="Abrir menú"
-              className="group flex h-10 items-center gap-2.5 rounded-full bg-white/[.08] pl-4 pr-3 text-sm font-semibold text-white ring-1 ring-inset ring-white/15 transition-colors hover:bg-white/15 lg:hidden"
+              className="group flex h-10 items-center gap-2.5 rounded-full bg-azul/[.06] pl-4 pr-3 text-sm font-semibold text-azul ring-1 ring-inset ring-azul/10 transition-colors hover:bg-azul/10 lg:hidden"
             >
               Menú
               <span className="flex w-5 flex-col items-end gap-[5px]" aria-hidden>
-                <span className="h-[2px] w-5 rounded-full bg-sol-claro transition-all duration-300 group-hover:w-3" />
-                <span className="h-[2px] w-3 rounded-full bg-white transition-all duration-300 group-hover:w-5" />
+                <span className="h-[2px] w-5 rounded-full bg-sol transition-all duration-300 group-hover:w-3" />
+                <span className="h-[2px] w-3 rounded-full bg-azul transition-all duration-300 group-hover:w-5" />
               </span>
             </button>
           </div>
