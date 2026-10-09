@@ -10,12 +10,12 @@ import { useIntroListo } from "./Intro";
 
 type MegaKey = "solar" | "ingenieria";
 
-const links: { href: string; label: string; mega?: MegaKey }[] = [
+const links: { href: string; label: string; corto?: string; mega?: MegaKey }[] = [
   { href: "/empresas", label: "Empresas" },
   { href: "/hogares", label: "Hogares" },
   { href: "/ingenieria", label: "Ingeniería", mega: "ingenieria" },
   { href: "#soluciones", label: "Soluciones", mega: "solar" },
-  { href: "#ley-1715", label: "Beneficios Ley 1715" },
+  { href: "#ley-1715", label: "Beneficios Ley 1715", corto: "Ley 1715" },
   { href: "#nosotros", label: "Nosotros" },
   { href: "#contacto", label: "Contacto" },
 ];
@@ -187,7 +187,7 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
             />
           </span>
 
-          <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="relative shrink-0 lg:max-xl:[&>span>span:last-child]:hidden">
+          <a href={enInicio ? "#inicio" : site.inicio} aria-label="SOLPOWER X, inicio" className="relative shrink-0">
             <Logo light={false} size={44} circulo={false} />
           </a>
 
@@ -220,12 +220,23 @@ export default function HeaderNuevo({ enInicio = false }: { enInicio?: boolean }
                     onClick={() => setMenu(null)}
                     aria-haspopup={l.mega ? "true" : undefined}
                     aria-expanded={l.mega ? isOpen : undefined}
-                    className={`group relative flex items-center gap-1.5 whitespace-nowrap px-2.5 py-2.5 transition-colors xl:px-3 duration-300 ${
+                    className={`group relative flex items-center gap-1.5 whitespace-nowrap px-2 py-2.5 transition-colors xl:px-3 duration-300 ${
                       isActive || isOpen ? "text-azul" : "text-azul/70"
                     }`}
                   >
                     <span className="sr-only">{l.label}</span>
-                    <Roll text={l.label} open={isOpen} />
+                    {l.corto ? (
+                      <>
+                        <span className="lg:max-xl:hidden">
+                          <Roll text={l.label} open={isOpen} />
+                        </span>
+                        <span className="hidden lg:max-xl:inline">
+                          <Roll text={l.corto} open={isOpen} />
+                        </span>
+                      </>
+                    ) : (
+                      <Roll text={l.label} open={isOpen} />
+                    )}
                     {l.mega && (
                       <motion.svg
                         width="10"

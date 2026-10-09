@@ -54,9 +54,9 @@ export default function Logo({ light = true, size = 40, circulo = true }: { ligh
       </span>
 
       <span
-        className={`flex items-baseline whitespace-nowrap text-[1.15rem] font-extrabold tracking-[0.04em] transition-colors duration-500 ${
-          light ? "text-white" : "text-azul"
-        }`}
+        className={`flex items-baseline whitespace-nowrap transition-colors duration-500 ${
+          circulo ? "text-[1.15rem] font-extrabold tracking-[0.04em]" : "text-[0.98rem] font-semibold tracking-[0.02em]"
+        } ${light ? "text-white" : "text-azul"}`}
         aria-label="SOLPOWER X"
       >
         {word.map((ch, i) => (
@@ -73,7 +73,9 @@ export default function Logo({ light = true, size = 40, circulo = true }: { ligh
         ))}
         <motion.span
           aria-hidden
-          className="logo-x ml-1.5 inline-block bg-[linear-gradient(110deg,#f0a500_35%,#fff6d6_50%,#f0a500_65%)] bg-[length:250%_100%] bg-clip-text text-[1.3em] leading-none text-transparent"
+          className={`logo-x inline-block bg-[linear-gradient(110deg,#f0a500_35%,#fff6d6_50%,#f0a500_65%)] bg-[length:250%_100%] bg-clip-text leading-none text-transparent ${
+            circulo ? "ml-1.5 text-[1.3em]" : "ml-1 text-[1em] font-bold"
+          }`}
           initial={{ scale: 0, rotate: -90 }}
           animate={{ scale: 1, rotate: 0 }}
           transition={{ delay: 0.95, type: "spring", stiffness: 260, damping: 14 }}
