@@ -1,4 +1,4 @@
-/** Contenido de la portada de prueba (/nueva). Para cambiar textos o fotos, edita este archivo. */
+/** Contenido de la portada principal. Para cambiar textos o imágenes, edita este archivo. */
 
 import { engineering, solar } from "./content";
 import { waEmpresas } from "./empresas";

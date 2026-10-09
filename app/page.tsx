@@ -1,37 +1,49 @@
-import Header from "@/components/site/Header";
-import Hero from "@/components/site/Hero";
+import Intro from "@/components/nueva/Intro";
+import HeaderNuevo from "@/components/nueva/HeaderNuevo";
+import HeroEscena from "@/components/nueva/HeroEscena";
+import Puertas from "@/components/nueva/Puertas";
+import Buscador from "@/components/nueva/Buscador";
+import IngenieriaDos from "@/components/nueva/IngenieriaDos";
+import Ley1715 from "@/components/nueva/Ley1715";
+import Nosotros from "@/components/nueva/Nosotros";
+import Cierre from "@/components/nueva/Cierre";
 import Manifesto from "@/components/site/Manifesto";
-import Solutions from "@/components/site/Solutions";
 import Analysis from "@/components/site/Analysis";
-import Process from "@/components/site/Process";
-import Engineering from "@/components/site/Engineering";
+import Solutions from "@/components/site/Solutions";
 import Clients from "@/components/site/Clients";
-import Trust from "@/components/site/Trust";
 import Faq from "@/components/site/Faq";
 import Contact from "@/components/site/Contact";
 import Footer from "@/components/site/Footer";
 import WhatsAppFloat from "@/components/site/WhatsAppFloat";
 import SmoothScroll from "@/components/site/SmoothScroll";
+import VolverArriba from "@/components/nueva/VolverArriba";
+import { imagenContacto, solucionesNueva } from "@/lib/nueva";
 
+/** Portada principal: escena 3D, accesos por tipo de cliente y las secciones de la empresa. */
 export default function Home() {
   return (
     <>
+      <Intro />
       <SmoothScroll />
-      <Header />
+      <HeaderNuevo enInicio />
       <main>
-        <Hero />
+        <HeroEscena />
+        <Puertas />
+        <Buscador />
         <Manifesto />
-        <Solutions />
         <Analysis />
-        <Process />
-        <Engineering />
+        <Solutions items={solucionesNueva} />
+        <IngenieriaDos />
         <Clients />
-        <Trust />
+        <Ley1715 />
+        <Nosotros />
         <Faq />
-        <Contact />
+        <Cierre />
+        <Contact imagen={imagenContacto} />
       </main>
       <Footer />
       <WhatsAppFloat />
+      <VolverArriba />
     </>
   );
 }
