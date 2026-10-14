@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
-import Lienzo from "./Lienzo";
+import Lienzo, { PorEtapas } from "./Lienzo";
 import type { MotionValue } from "framer-motion";
 import { Arboles, Cables, Cielo, Terreno, c01, lerp, texturaCeldas, texturaLamina, texturaMalla, texturaRejilla, texturaSenal, tramo, type Camino, type Zona } from "./comun";
 
@@ -858,7 +858,7 @@ function Mundo({ progress, raton, listo, movil }: Props) {
   });
 
   return (
-    <>
+    <PorEtapas>
       <Cielo hora={hora} centro={centro} sombra={60} calidad={movil ? 1024 : 2048} />
       <Terreno zonas={zonas} caminos={caminos} seg={movil ? 140 : 220} />
       <Arboles zonas={zonas} n={movil ? 60 : 120} rmin={55} rmax={170} />
@@ -870,7 +870,7 @@ function Mundo({ progress, raton, listo, movil }: Props) {
       <Inversores movil={movil} energia={energia} />
       <Skid energia={energia} />
       <Fabrica energia={energia} />
-    </>
+    </PorEtapas>
   );
 }
 

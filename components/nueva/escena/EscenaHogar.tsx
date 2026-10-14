@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { RoundedBox } from "@react-three/drei";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
-import Lienzo from "./Lienzo";
+import Lienzo, { PorEtapas } from "./Lienzo";
 import type { MotionValue } from "framer-motion";
 import { Bateria, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, lerp, texturaCeldas, tramo, type Momento, type Zona } from "./comun";
@@ -667,7 +667,7 @@ function Mundo({ progress, raton, movil }: Props) {
 
   const centro = useMemo(() => new THREE.Vector3(3, 0, 4), []);
   return (
-    <>
+    <PorEtapas>
       <Cielo hora={hora} momentos={dia} arco={[0.05, 3.2]} centro={centro} sombra={36} calidad={movil ? 1024 : 2048} />
       <Terreno zonas={zonas} seg={movil ? 140 : 220} />
       <Arboles zonas={[{ x0: -40, x1: 45, z0: -35, z1: 45 }]} n={movil ? 50 : 110} rmin={55} rmax={170} semilla={7} />
@@ -699,7 +699,7 @@ function Mundo({ progress, raton, movil }: Props) {
       <Tuberia rutas={rutas.acometida} radio={0.045} nivel={deRed} />
       <Cables rutas={rutas.carro} nivel={carro} grosor={0.035} fases={1} />
       <Cables rutas={rutas.red} nivel={deRed} grosor={0.03} fases={3} enterrado recto />
-    </>
+    </PorEtapas>
   );
 }
 

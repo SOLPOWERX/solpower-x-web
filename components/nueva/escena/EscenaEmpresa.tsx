@@ -3,7 +3,7 @@
 import { useFrame, useThree } from "@react-three/fiber";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject } from "react";
 import * as THREE from "three";
-import Lienzo from "./Lienzo";
+import Lienzo, { PorEtapas } from "./Lienzo";
 import type { MotionValue } from "framer-motion";
 import { Bandeja, Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, paralela, type Momento, lerp, texturaCeldas, texturaLamina, texturaRejilla, tramo, type Zona } from "./comun";
@@ -519,7 +519,7 @@ function Mundo({ progress, raton, movil }: Props) {
 
   const centro = useMemo(() => new THREE.Vector3(4, 0, 6), []);
   return (
-    <>
+    <PorEtapas>
       <Cielo hora={hora} momentos={dia} arco={[0.05, 3.2]} centro={centro} sombra={55} calidad={movil ? 1024 : 2048} />
       <Terreno zonas={zonas} seg={movil ? 140 : 220} />
       <Arboles zonas={zonas} n={movil ? 60 : 130} rmin={50} rmax={170} semilla={3} />
@@ -551,7 +551,7 @@ function Mundo({ progress, raton, movil }: Props) {
           <meshStandardMaterial color="#6f7a86" metalness={0.6} />
         </mesh>
       </group>
-    </>
+    </PorEtapas>
   );
 }
 

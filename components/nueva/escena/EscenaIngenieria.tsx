@@ -4,7 +4,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Html, RoundedBox } from "@react-three/drei";
 import { useLayoutEffect, useMemo, useRef, type MutableRefObject, type ReactNode } from "react";
 import * as THREE from "three";
-import Lienzo from "./Lienzo";
+import Lienzo, { PorEtapas } from "./Lienzo";
 import type { MotionValue } from "framer-motion";
 import { Inversor, Tablero, useLedsEquipos, useMaterialesEquipos } from "./equipos";
 import { Arboles, Cables, Cielo, Terreno, Tuberia, c01, texturaCeldas, texturaMalla, texturaRejilla, texturaSenal, tramo, type Momento, type Zona } from "./comun";
@@ -647,7 +647,7 @@ function Mundo({ progress, raton, movil }: Props) {
 
   const centro = useMemo(() => new THREE.Vector3(4, 0, 0), []);
   return (
-    <>
+    <PorEtapas>
       <Cielo hora={hora} momentos={dia} centro={centro} sombra={45} calidad={movil ? 1024 : 2048} />
       {/* Cuadrícula del plano técnico */}
       <Cuadricula progress={progress} />
@@ -682,7 +682,7 @@ function Mundo({ progress, raton, movil }: Props) {
       <Cota progress={progress} pos={[7, 4.6, -2]} texto="Cuarto de celdas" />
       <Cota progress={progress} pos={[17, 2.8, -1]} texto="Generación solar 35 kWp" />
       <Cota progress={progress} pos={[16, 0.6, 7]} texto="Malla de puesta a tierra · IEEE 80" />
-    </>
+    </PorEtapas>
   );
 }
 

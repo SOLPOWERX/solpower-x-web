@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const EVENTO = "sx:intro-listo";
@@ -33,6 +33,7 @@ function abrir() {
  */
 export default function Intro() {
   const [fase, setFase] = useState<"entra" | "sale" | "fin">("entra");
+  const saliendo = useRef(false);
 
   useEffect(() => {
     // Solo la primera vez en cada visita: al volver de otra página no se repite
@@ -48,12 +49,31 @@ export default function Intro() {
     }
     window.scrollTo(0, 0);
     document.documentElement.style.overflow = "hidden";
-    const t1 = setTimeout(() => salir(), 2300);
-    return () => clearTimeout(t1);
+    // Se abre cuando terminó su animación y la escena 3D ya está lista; si la escena tarda, no espera más de 7 s
+    let minimo = false;
+    let escena = !!(window as unknown as { __sxEscena?: boolean }).__sxEscena;
+    const intentar = () => minimo && escena && salir();
+    const alEscena = () => {
+      escena = true;
+      intentar();
+    };
+    window.addEventListener("sx:escena-lista", alEscena);
+    const t1 = setTimeout(() => {
+      minimo = true;
+      intentar();
+    }, 2300);
+    const t2 = setTimeout(() => salir(), 7000);
+    return () => {
+      window.removeEventListener("sx:escena-lista", alEscena);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function salir() {
+    if (saliendo.current) return;
+    saliendo.current = true;
     setFase((f) => (f === "entra" ? "sale" : f));
     abrir();
     setTimeout(() => {
