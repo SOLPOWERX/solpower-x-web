@@ -74,7 +74,7 @@ export default function Footer() {
           </p>
         </div>
       </div>
-      <div className="mx-auto mt-16 flex max-w-6xl flex-col gap-3 border-t border-white/10 px-5 py-8 text-sm md:flex-row md:justify-between">
+      <div className="mx-auto mt-16 flex max-w-6xl flex-col gap-3 border-t border-white/10 px-5 pb-24 pt-8 text-sm md:flex-row md:justify-between">
         <p>© {new Date().getFullYear()} SOLPOWER X. Todos los derechos reservados.</p>
         <p>Ingeniería eléctrica y energía solar en Colombia.</p>
       </div>

@@ -71,11 +71,11 @@ export default function Analysis() {
         <div>
           <p className="mb-4 font-semibold text-sol">Análisis técnico-financiero</p>
           <h2 className="title text-azul">
-            Antes de invertir, <span className="text-sol">conoce tus números</span>
+            Antes de invertir, <span className="text-sol">conozca sus números</span>
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-gris">
-            Cada proyecto empieza con un estudio de tu consumo y una simulación en PVsyst. Te entregamos producción
-            esperada, flujo de caja a 25 años, TIR, VPN y periodo de retorno para que decidas con datos.
+            Cada proyecto empieza con un estudio de su consumo y una simulación en PVsyst. Le entregamos producción
+            esperada, flujo de caja a 25 años, TIR, VPN y periodo de retorno para que decida con datos.
           </p>
 
           <h3 className="mt-12 text-xl font-bold text-azul">Beneficios tributarios de la Ley 1715</h3>
@@ -101,8 +101,8 @@ export default function Analysis() {
           id="calculadora"
           className="scroll-mt-28 rounded-[32px] bg-azul p-6 text-white shadow-[0_40px_80px_-30px_rgba(13,43,94,.7)] md:p-9"
         >
-          <h3 className="text-2xl font-bold">Calcula tu ahorro</h3>
-          <p className="mt-1 text-sm text-white/65">Mueve la barra con el valor de tu factura mensual.</p>
+          <h3 className="text-2xl font-bold">Calcule su ahorro</h3>
+          <p className="mt-1 text-sm text-white/65">Mueva la barra con el valor de su factura mensual.</p>
 
           <div className="mt-6 inline-flex rounded-full bg-white/10 p-1" role="group" aria-label="Tipo de cliente">
             {(["hogar", "empresa"] as Kind[]).map((k) => (
@@ -183,7 +183,7 @@ export default function Analysis() {
           </div>
 
           <p className="mt-5 text-xs leading-relaxed text-white/55">
-            Estimación referencial. El valor real sale del estudio técnico de tu proyecto.
+            Estimación referencial. El valor real sale del estudio técnico de su proyecto.
           </p>
           <a
             href={`${site.whatsapp}un%20an%C3%A1lisis%20t%C3%A9cnico-financiero.%20Mi%20factura%20es%20de%20${encodeURIComponent(cop(bill))}`}

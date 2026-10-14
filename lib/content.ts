@@ -12,7 +12,7 @@ export const media = {
 };
 
 export const stats = [
-  { value: 90, prefix: "Hasta ", suffix: "%", label: "menos en tu factura de energía" },
+  { value: 90, prefix: "Hasta ", suffix: "%", label: "menos en su factura de energía" },
   { value: 5, prefix: "3 a ", suffix: " años", label: "de retorno de la inversión" },
   { value: 25, prefix: "+", suffix: " años", label: "de vida útil de los paneles" },
   { value: 100, prefix: "", suffix: "%", label: "de los diseños bajo RETIE" },
@@ -24,7 +24,7 @@ export const solar = [
     title: "Sistemas On-Grid",
     tag: "Conectado a la red",
     image: u("photo-1707247111552-aaf74241058b"),
-    body: "Conéctate a la red y reduce tu factura hasta en un 90% vendiendo tus excedentes con la regulación CREG 174.",
+    body: "Conéctese a la red y reduzca su factura hasta en un 90% vendiendo sus excedentes con la regulación CREG 174.",
     points: ["Retorno de inversión en 3 a 5 años", "Venta de excedentes al operador", "Mantenimiento simplificado"],
   },
   {
@@ -40,7 +40,7 @@ export const solar = [
     title: "Sistemas Híbridos",
     tag: "Ahorro + respaldo",
     image: u("photo-1591344011733-2af60f598737"),
-    body: "Lo mejor de ambos mundos: ahorro en tu factura y respaldo total cuando se va la luz.",
+    body: "Lo mejor de ambos mundos: ahorro en su factura y respaldo total cuando se va la luz.",
     points: ["Respaldo de energía 24/7", "Gestión inteligente de baterías", "Prioriza el sol, luego la batería, luego la red"],
   },
   {
@@ -64,7 +64,7 @@ export const solar = [
 export const process = [
   {
     title: "Estudio de consumo",
-    body: "Analizamos tus facturas, curva de carga y el sitio para saber cuánta energía necesitas y dónde instalarla.",
+    body: "Analizamos sus facturas, curva de carga y el sitio para saber cuánta energía necesita y dónde instalarla.",
   },
   {
     title: "Simulación y diseño RETIE",
@@ -126,14 +126,14 @@ export const norms = [
 export const values = [
   { title: "Ética e ingeniería", body: "Transparencia total en presupuestos y proyecciones de ahorro a largo plazo." },
   { title: "Un solo responsable", body: "El mismo equipo diseña, firma y responde ante el inspector y el operador de red." },
-  { title: "Simulación antes de invertir", body: "Sabes cuánto vas a generar y ahorrar antes de comprar un solo panel." },
+  { title: "Simulación antes de invertir", body: "Usted sabe cuánto va a generar y ahorrar antes de comprar un solo panel." },
   { title: "Impacto sostenible", body: "Comprometidos con la transición energética justa y normada en Colombia." },
 ];
 
 export const faqs = [
   {
     q: "¿Cuánto cuesta un sistema solar en Colombia?",
-    a: "Depende de tu consumo y del tipo de sistema. Como referencia, un sistema on-grid residencial está entre 3,5 y 4,5 millones de pesos por kWp instalado. Con un estudio de tu factura te damos el valor exacto.",
+    a: "Depende de su consumo y del tipo de sistema. Como referencia, un sistema on-grid residencial está entre 3,5 y 4,5 millones de pesos por kWp instalado. Con un estudio de su factura le damos el valor exacto.",
   },
   {
     q: "¿En cuánto tiempo recupero la inversión?",
@@ -141,11 +141,11 @@ export const faqs = [
   },
   {
     q: "¿Qué diferencia hay entre on-grid, off-grid e híbrido?",
-    a: "On-grid se conecta a la red y no usa baterías. Off-grid funciona solo, con baterías, donde no hay red. Híbrido combina ambos: ahorra con el sol y te respalda cuando se va la luz.",
+    a: "On-grid se conecta a la red y no usa baterías. Off-grid funciona solo, con baterías, donde no hay red. Híbrido combina ambos: ahorra con el sol y lo respalda cuando se va la luz.",
   },
   {
     q: "¿Mi sistema solar necesita certificación RETIE?",
-    a: "Sí. Toda instalación eléctrica en Colombia debe cumplir el RETIE, y el operador de red exige el certificado para conectar tu sistema y recibir excedentes.",
+    a: "Sí. Toda instalación eléctrica en Colombia debe cumplir el RETIE, y el operador de red exige el certificado para conectar su sistema y recibir excedentes.",
   },
   {
     q: "¿Pueden legalizar un sistema que ya está instalado?",

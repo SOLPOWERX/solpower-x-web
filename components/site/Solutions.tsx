@@ -81,7 +81,7 @@ export default function Solutions({ items = solar }: { items?: typeof solar }) {
               Un sistema para cada necesidad, <span className="text-sol">diseñado con ingeniería</span>
             </h2>
             <p className="mt-6 max-w-md text-lg leading-relaxed text-white/75">
-              Maximizamos tu retorno de inversión con sistemas diseñados para el clima y la infraestructura de cada
+              Maximizamos su retorno de inversión con sistemas diseñados para el clima y la infraestructura de cada
               región de Colombia.
             </p>
             <div className="mt-10 hidden h-1 w-64 overflow-hidden rounded-full bg-white/15 lg:block">

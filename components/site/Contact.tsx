@@ -50,10 +50,10 @@ export default function Contact({ imagen }: { imagen?: string }) {
           {!imagen && <Image src={`${media.heroPoster}?w=1400&q=70&auto=format`} alt="" fill sizes="50vw" className="object-cover" />}
           <div className="absolute inset-0 bg-gradient-to-br from-azul/95 via-azul/85 to-azul-950/90" />
           <div className="relative flex h-full flex-col">
-            <p className="mb-4 font-semibold text-sol">Contáctanos</p>
-            <h2 className="title">Conversemos sobre tu proyecto</h2>
+            <p className="mb-4 font-semibold text-sol">Contáctenos</p>
+            <h2 className="title">Conversemos sobre su proyecto</h2>
             <p className="mt-5 max-w-sm text-white/80">
-              Cuéntanos qué necesitas y te respondemos con los siguientes pasos y una cotización.
+              Cuéntenos qué necesita y le respondemos con los siguientes pasos y una cotización.
             </p>
             {imagen && (
               <Image
@@ -119,7 +119,7 @@ export default function Contact({ imagen }: { imagen?: string }) {
           </label>
           <label className="grid gap-1.5 text-sm font-medium text-azul">
             Mensaje
-            <textarea name="message" required rows={4} placeholder="Ciudad, tipo de inmueble, valor de tu factura o potencia aproximada…" className={field} />
+            <textarea name="message" required rows={4} placeholder="Ciudad, tipo de inmueble, valor de su factura o potencia aproximada…" className={field} />
           </label>
           <label className="flex items-start gap-3 text-sm text-gris">
             <input type="checkbox" name="consent" value="si" required className="mt-1 h-4 w-4 accent-[#0d2b5e]" />
@@ -131,12 +131,12 @@ export default function Contact({ imagen }: { imagen?: string }) {
           <AnimatePresence mode="wait">
             {status === "sent" && (
               <motion.p key="ok" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="status" className="rounded-xl bg-green-50 p-4 text-sm text-green-800">
-                Mensaje enviado. Te contactaremos pronto al correo que dejaste.
+                Mensaje enviado. Lo contactaremos pronto al correo que nos dejó.
               </motion.p>
             )}
             {status === "error" && (
               <motion.p key="err" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-800">
-                No se pudo enviar el mensaje. Escríbenos por WhatsApp al{" "}
+                No se pudo enviar el mensaje. Escríbanos por WhatsApp al{" "}
                 <a href={`${site.whatsapp}un%20proyecto`} className="font-semibold underline">
                   {site.phone}
                 </a>

@@ -20,9 +20,9 @@ export default function Faq() {
         <div>
           <p className="mb-4 font-semibold text-sol">Preguntas frecuentes</p>
           <h2 className="title text-azul">
-            Resolvemos <span className="text-sol">tus dudas</span>
+            Resolvemos <span className="text-sol">sus dudas</span>
           </h2>
-          <p className="mt-5 max-w-sm text-gris">Si tu pregunta no está aquí, escríbenos y te respondemos con gusto.</p>
+          <p className="mt-5 max-w-sm text-gris">Si su pregunta no está aquí, escríbanos y le respondemos con gusto.</p>
         </div>
         <ul className="space-y-3">
           {faqs.map((f, i) => {
